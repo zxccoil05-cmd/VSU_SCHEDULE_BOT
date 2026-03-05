@@ -1,1 +1,1 @@
-python==3.12.0
+web: python main.py

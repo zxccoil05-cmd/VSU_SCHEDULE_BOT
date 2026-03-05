@@ -1,7 +1,7 @@
-aiogram==3.3.0
-aiohttp==3.9.1
-openpyxl==3.1.2
-python-dotenv==1.0.0
-pytz==2023.3
-bs4==0.0.2
-apscheduler==3.11.2
+aiogram
+openpyxl
+requests
+beautifulsoup4
+aiohttp
+aiohttp-cors
+python-dotenv
