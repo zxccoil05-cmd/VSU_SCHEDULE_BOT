@@ -1,13 +1,33 @@
-<main>
-    <div id="group-selector-container">
-        <select id="group-select">
-            <option value="">-- Выберите группу --</option>
-        </select>
-    </div>
-    
-    <div id="schedule-container">
-        <div class="message">
-            <p>Выберите группу для просмотра расписания</p>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>Расписание ФМиИТ</title>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Расписание</h1>
+            <div class="status" id="status">Загрузка данных...</div>
+        </header>
+
+        <div class="controls">
+            <label for="group-select">Ваша подгруппа:</label>
+            <select id="group-select">
+                <option value="">-- Выберите из списка --</option>
+            </select>
         </div>
+
+        <main id="schedule-container">
+            <div class="empty-state">
+                <p>Выберите группу, чтобы увидеть список занятий</p>
+            </div>
+        </main>
     </div>
-</main>
+
+    <script src="script.js"></script>
+</body>
+</html>
