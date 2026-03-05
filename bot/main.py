@@ -5,6 +5,7 @@ import json
 from aiohttp import web
 import aiohttp_cors  # Установи: pip install aiohttp-cors
 from dotenv import load_dotenv
+from aiogram.client.default import DefaultBotProperties
 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
@@ -23,7 +24,10 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 SCHEDULE_URL = os.getenv('SCHEDULE_URL') # Ссылка на страницу ФМиИТ
 WEBAPP_URL = os.getenv('WEBAPP_URL')     # Ссылка на твой HTML на Render
 
-bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+bot = Bot(
+    token=BOT_TOKEN, 
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+)
 dp = Dispatcher()
 parser = scheduler.init_parser(SCHEDULE_URL)
 
