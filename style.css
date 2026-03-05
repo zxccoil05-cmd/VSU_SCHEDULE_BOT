@@ -1,103 +1,65 @@
 :root {
     --bg-color: #ffffff;
-    --accent-blue: #40a7e3;
-    --light-blue: #e3f2fd;
+    --accent-blue: #0088cc; /* Фирменный цвет Telegram */
+    --light-blue: #e8f4fa;
     --text-main: #222222;
-    --text-muted: #777777;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --text-muted: #8e8e93;
+    --card-bg: #ffffff;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
-    line-height: 1.5;
 }
 
-.container {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 16px;
-}
+.container { max-width: 600px; margin: 0 auto; padding: 16px; }
 
-header {
-    text-align: center;
-    padding: 20px 0;
-}
+header { padding: 10px 0 20px; text-align: center; }
+header h1 { font-size: 24px; color: var(--accent-blue); font-weight: 700; }
+.status { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
-header h1 {
-    font-size: 28px;
-    color: var(--accent-blue);
-    margin-bottom: 5px;
-}
-
-.status {
-    font-size: 14px;
-    color: var(--text-muted);
-}
-
-/* Выбор группы */
-.controls {
-    margin-bottom: 24px;
-}
-
-.controls label {
-    display: block;
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--accent-blue);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-}
+.controls { margin-bottom: 20px; }
+.controls label { display: block; font-size: 11px; font-weight: 700; color: var(--accent-blue); margin-bottom: 6px; letter-spacing: 0.5px; }
 
 #group-select {
     width: 100%;
     padding: 12px;
-    border: 2px solid var(--light-blue);
+    border: 1.5px solid var(--light-blue);
     border-radius: 12px;
     font-size: 16px;
+    background-color: #f9fbfd;
     outline: none;
-    transition: border-color 0.3s;
+    appearance: none;
 }
 
-#group-select:focus {
-    border-color: var(--accent-blue);
-}
-
-/* Карточки дней */
 .day-card {
-    background: #fff;
+    background: var(--card-bg);
     border-radius: 16px;
     padding: 16px;
-    margin-bottom: 20px;
-    border: 1px solid var(--light-blue);
+    margin-bottom: 16px;
+    border: 1px solid #f0f0f0;
     box-shadow: var(--shadow);
 }
 
 .day-title {
     font-size: 18px;
-    font-weight: bold;
+    font-weight: 700;
     color: var(--accent-blue);
     margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--light-blue);
+    display: flex;
+    align-items: center;
 }
 
-/* Занятия */
 .lesson-item {
-    padding: 10px 0;
-    border-bottom: 1px dashed #f0f0f0;
+    padding: 12px 0;
+    border-top: 1px solid #f8f8f8;
 }
 
-.lesson-item:last-child {
-    border-bottom: none;
-}
+.lesson-item:first-of-type { border-top: none; }
 
 .lesson-time {
     display: inline-block;
@@ -105,24 +67,12 @@ header h1 {
     color: var(--accent-blue);
     padding: 2px 8px;
     border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
 }
 
-.lesson-name {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 2px;
-}
+.lesson-name { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.lesson-info { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
-.lesson-info {
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
-}
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); font-size: 14px; }

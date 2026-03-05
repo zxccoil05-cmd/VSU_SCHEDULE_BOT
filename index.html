@@ -2,32 +2,31 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
-    <title>Расписание ФМиИТ</title>
+    <title>Расписание ВГУ</title>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📚 Расписание</h1>
-            <div class="status" id="status">Загрузка данных...</div>
+            <h1 id="fac-name">Расписание</h1>
+            <div class="status" id="status">Подключение...</div>
         </header>
 
         <div class="controls">
-            <label for="group-select">Ваша подгруппа:</label>
+            <label for="group-select">ГРУППА</label>
             <select id="group-select">
-                <option value="">-- Выберите из списка --</option>
+                <option value="">Загрузка списка...</option>
             </select>
         </div>
 
         <main id="schedule-container">
             <div class="empty-state">
-                <p>Выберите группу, чтобы увидеть список занятий</p>
+                Выберите группу для просмотра занятий
             </div>
         </main>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>

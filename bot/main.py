@@ -2,121 +2,134 @@ import os
 import logging
 import asyncio
 import json
+import sys
 from aiohttp import web
-import aiohttp_cors  # Установи: pip install aiohttp-cors
+import aiohttp_cors
 from dotenv import load_dotenv
-from aiogram.client.default import DefaultBotProperties
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
+from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, BotCommand
 from aiogram.enums import ParseMode
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import scheduler
-import utils
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Читаем переменные окружения
+# --- CONFIG ---
+FACULTIES = {
+    "ФМиИТ": "https://vsu.by/universitet/fakultety/matematiki-i-it/raspisanie.html",
+    "ХБиГН": "https://vsu.by/universitet/fakultety/biologicheskij/raspisanie.html",
+    "ПФ": "https://vsu.by/universitet/fakultety/pedagogicheskij-fakultet/raspisanie.html",
+    "ФСПиП": "https://vsu.by/universitet/fakultety/sotsialnoj-pedagogiki-i-psikhologii/raspisanie.html",
+    "ФФКиС": "https://vsu.by/universitet/fakultety/fizicheskoj-kultury-i-sporta/raspisanie.html",
+    "ФГЗиК": "https://vsu.by/universitet/fakultety/fakultet-gumanitarnogo-znaniya-i-kommunikacij/raspisanie.html",
+    "ХГФ": "https://vsu.by/universitet/fakultety/khudozhestvenno-graficheskij/raspisanie.html",
+    "ЮФ": "https://vsu.by/universitet/fakultety/yuridicheskij/raspisanie.html"
+}
+
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-SCHEDULE_URL = os.getenv('SCHEDULE_URL') # Ссылка на страницу ФМиИТ
-WEBAPP_URL = os.getenv('WEBAPP_URL')     # Ссылка на твой HTML на Render
+WEBAPP_URL = os.getenv('WEBAPP_URL')
+DATA_FILE = "user_settings.json"
 
-bot = Bot(
-    token=BOT_TOKEN, 
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-)
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-parser = scheduler.init_parser(SCHEDULE_URL)
+parser = scheduler.MultiFacultyParser(FACULTIES)
 
-# Хранилище групп в памяти (лучше потом заменить на БД или JSON файл)
-user_groups = {}
+def load_users():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, 'r', encoding='utf-8') as f: return json.load(f)
+    return {}
 
-# --- БЛОК API СЕРВЕРА (То, чего у тебя не было) ---
+def save_users(data):
+    with open(DATA_FILE, 'w', encoding='utf-8') as f: json.dump(data, f, ensure_ascii=False, indent=4)
 
+user_data = load_users()
+
+# --- API ---
 async def run_api_server():
     app = web.Application()
+    cors = aiohttp_cors.setup(app, defaults={"*": aiohttp_cors.ResourceOptions(allow_credentials=True, expose_headers="*", allow_headers="*")})
     
-    # Настройка CORS для работы с Web App
-    cors = aiohttp_cors.setup(app, defaults={
-        "*": aiohttp_cors.ResourceOptions(
-            allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-        )
-    })
-
     async def get_schedule_api(request):
-        data = await parser.get_schedule()
+        fac = request.query.get('faculty', 'ФМиИТ')
+        data = await parser.get_faculty_schedule(fac)
         return web.json_response(data)
 
-    # Регистрация путей
-    res_schedule = app.router.add_get('/api/schedule', get_schedule_api)
-    app.router.add_get('/', lambda r: web.Response(text="Bot & API are running"))
-    
-    # Применяем CORS
-    cors.add(res_schedule)
+    async def health(request): return web.Response(text="OK")
 
+    app.router.add_get('/api/schedule', get_schedule_api)
+    app.router.add_get('/health', health)
+    for r in list(app.router.routes()): cors.add(r)
+    
     runner = web.AppRunner(app)
     await runner.setup()
-    # Render дает порт в переменной окружения PORT
-    port = int(os.environ.get('PORT', 10000))
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    await site.start()
-    logger.info(f"✅ API сервер запущен на порту {port}")
+    await web.TCPSite(runner, '0.0.0.0', int(os.environ.get('PORT', 10000))).start()
 
-# --- ЛОГИКА БОТА ---
-
-def get_main_keyboard(user_id: int) -> InlineKeyboardMarkup:
-    # Пытаемся достать группу пользователя для ссылки
-    group = user_groups.get(str(user_id), "")
+# --- KEYBOARDS ---
+def get_main_kb(uid):
+    u = user_data.get(str(uid), {"fac": "ФМиИТ", "group": ""})
+    url = f"{WEBAPP_URL}?faculty={u['fac']}&group={u['group']}"
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text="🌐 Открыть расписание", 
-            web_app=WebAppInfo(url=f"{WEBAPP_URL}?group={group}")
-        )],
-        [InlineKeyboardButton(text="📅 Моё в чате", callback_data="my_schedule")],
-        [InlineKeyboardButton(text="👥 Выбрать группу", callback_data="choose_group")]
+        [InlineKeyboardButton(text="📅 Открыть расписание", web_app=WebAppInfo(url=url))],
+        [InlineKeyboardButton(text="⚙️ Сменить факультет/группу", callback_data="change_fac")]
     ])
 
+def get_fac_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f, callback_data=f"setfac_{f}")] for f in FACULTIES.keys()])
+
+def get_grp_kb(fac):
+    grps = parser.get_groups_list(fac)
+    btns = []
+    row = []
+    for i, g in enumerate(grps, 1):
+        row.append(InlineKeyboardButton(text=g, callback_data=f"setgrp_{g}"))
+        if i % 3 == 0: btns.append(row); row = []
+    if row: btns.append(row)
+    btns.append([InlineKeyboardButton(text="⬅️ Назад", callback_data="change_fac")])
+    return InlineKeyboardMarkup(inline_keyboard=btns)
+
+# --- HANDLERS ---
 @dp.message(Command("start"))
-async def cmd_start(message: Message):
-    await message.answer(
-        "👋 Привет! Используй Web App для удобного просмотра или выбери группу ниже:",
-        reply_markup=get_main_keyboard(message.from_user.id)
-    )
+async def start(m: Message):
+    await m.answer("Выбери свой факультет:", reply_markup=get_fac_kb())
 
-@dp.callback_query(lambda c: c.data.startswith("group_"))
-async def callback_select_group(callback: CallbackQuery):
-    group = callback.data.replace("group_", "")
-    user_groups[str(callback.from_user.id)] = group
-    await callback.answer(f"Выбрана группа: {group}")
-    await callback.message.edit_text(
-        f"✅ Группа {group} сохранена!", 
-        reply_markup=get_main_keyboard(callback.from_user.id)
-    )
+@dp.callback_query(F.data == "change_fac")
+async def change(c: CallbackQuery):
+    await c.answer(); await c.message.edit_text("Выбери факультет:", reply_markup=get_fac_kb())
 
-# ... (остальные хендлеры: choose_group, my_schedule и т.д. из предыдущих версий)
+@dp.callback_query(F.data.startswith("setfac_"))
+async def setfac(c: CallbackQuery):
+    fac = c.data.split("_")[1]
+    user_data[str(c.from_user.id)] = {"fac": fac, "group": ""}
+    save_users(user_data)
+    await c.answer(); await c.message.edit_text(f"Факультет {fac}. Выбери группу:", reply_markup=get_groups_kb_safe(fac))
 
-# --- ЗАПУСК ---
+def get_groups_kb_safe(fac):
+    kb = get_grp_kb(fac)
+    if not kb.inline_keyboard or len(kb.inline_keyboard) == 1:
+        return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⚠️ Группы еще грузятся, нажми позже", callback_data=f"setfac_{fac}")]])
+    return kb
 
+@dp.callback_query(F.data.startswith("setgrp_"))
+async def setgrp(c: CallbackQuery):
+    grp = c.data.split("_")[1]
+    uid = str(c.from_user.id)
+    user_data[uid]["group"] = grp
+    save_users(user_data)
+    await c.answer(); await c.message.edit_text(f"✅ Готово! Группа: {grp}", reply_markup=get_main_kb(uid))
+
+# --- MAIN ---
 async def main():
-    # 1. Сначала парсим данные, чтобы кэш не был пустым
-    logger.info("Загрузка расписания...")
-    await parser.get_schedule(force_refresh=True)
-
-    # 2. Запускаем API сервер фоном
+    await bot.set_my_commands([BotCommand(command="start", description="Главное меню / Выбор группы")])
     asyncio.create_task(run_api_server())
-
-    # 3. Запускаем бота
-    logger.info("Запуск бота...")
-    await bot.delete_webhook(drop_pending_updates=True)
+    logger.info("Парсинг данных...")
+    await parser.refresh_all()
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        logger.info("Бот остановлен")
+    asyncio.run(main())
