@@ -1,34 +1,13 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <title>Расписание ВГУ</title>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>📚 Расписание ФМиИТ</h1>
-            <div class="status" id="status">🔄 Загрузка...</div>
-        </header>
-
-        <main>
-            <div class="message">
-                <h2>⚡ Web App в разработке</h2>
-                <p>Скоро здесь будет удобное расписание с поиском и фильтрами</p>
-                <p class="small">А пока можно посмотреть расписание в чате командой /schedule</p>
-            </div>
-
-            <div class="debug" id="debug"></div>
-        </main>
-
-        <footer>
-            <button class="tg-button" id="mainBtn">Главная кнопка</button>
-        </footer>
+<main>
+    <div id="group-selector-container">
+        <select id="group-select">
+            <option value="">-- Выберите группу --</option>
+        </select>
     </div>
-
-    <script src="script.js"></script>
-</body>
-</html>
+    
+    <div id="schedule-container">
+        <div class="message">
+            <p>Выберите группу для просмотра расписания</p>
+        </div>
+    </div>
+</main>

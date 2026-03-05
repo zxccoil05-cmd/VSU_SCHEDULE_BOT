@@ -1,58 +1,71 @@
-// Инициализация Telegram Web App
 const tg = window.Telegram.WebApp;
-
-// Сразу говорим Telegram, что приложение готово
 tg.ready();
-
-// Растягиваем на весь экран
 tg.expand();
 
-// Получаем информацию о пользователе
-const user = tg.initDataUnsafe?.user;
-const statusDiv = document.getElementById('status');
-const debugDiv = document.getElementById('debug');
+// УКАЖИ ЗДЕСЬ СВОЙ URL БОТА НА RENDER
+const BOT_DOMAIN = "https://your-bot-name.onrender.com"; 
 
-// Показываем статус
-if (user) {
-    statusDiv.textContent = `👋 Привет, ${user.first_name || 'пользователь'}!`;
-} else {
-    statusDiv.textContent = '⚡ Демо-режим';
+const scheduleContainer = document.getElementById('schedule-container');
+const groupSelect = document.getElementById('group-select');
+let fullData = {};
+
+// 1. Загрузка данных при запуске
+async function loadData() {
+    try {
+        const response = await fetch(`${BOT_DOMAIN}/api/schedule`);
+        fullData = await response.json();
+        
+        // Заполняем выпадающий список группами
+        Object.keys(fullData).forEach(group => {
+            const opt = document.createElement('option');
+            opt.value = group;
+            opt.textContent = group;
+            groupSelect.appendChild(opt);
+        });
+
+        // Если группа передана в URL (из бота), выбираем её сразу
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupParam = urlParams.get('group');
+        if (groupParam && fullData[groupParam]) {
+            groupSelect.value = groupParam;
+            renderSchedule(groupParam);
+        }
+
+    } catch (e) {
+        scheduleContainer.innerHTML = `<p style="color:red">Ошибка загрузки: ${e.message}</p>`;
+    }
 }
 
-// Обработка главной кнопки
-document.getElementById('mainBtn').addEventListener('click', () => {
-    // Отправляем тестовые данные боту
-    tg.sendData(JSON.stringify({
-        action: 'ping',
-        timestamp: new Date().toISOString()
-    }));
-    
-    tg.showAlert('Данные отправлены боту!');
-});
+// 2. Отрисовка расписания
+function renderSchedule(groupName) {
+    const days = fullData[groupName];
+    scheduleContainer.innerHTML = ''; // Очистка
 
-// Показываем отладочную информацию (можно включить если нужно)
-function showDebug() {
-    debugDiv.style.display = 'block';
-    debugDiv.innerHTML = `
-        <b>Init Data:</b> ${tg.initData}<br>
-        <b>User:</b> ${JSON.stringify(user, null, 2)}<br>
-        <b>Platform:</b> ${tg.platform}<br>
-        <b>Version:</b> ${tg.version}
-    `;
+    const orderedDays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+
+    orderedDays.forEach(day => {
+        if (!days[day] || days[day].length === 0) return;
+
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        dayCard.innerHTML = `<div class="day-title">${day}</div>`;
+
+        days[day].forEach(lesson => {
+            dayCard.innerHTML += `
+                <div class="lesson-item">
+                    <div class="lesson-time">⏰ ${lesson.time}</div>
+                    <div class="lesson-name"><b>${lesson.name}</b></div>
+                    <div class="lesson-info">👤 ${lesson.teacher} | 🏛️ ${lesson.room}</div>
+                </div>
+            `;
+        });
+        scheduleContainer.appendChild(dayCard);
+    });
 }
 
-// Раскомментируйте для отладки:
-// showDebug();
-
-// Настройка основной кнопки Telegram (синяя кнопка внизу)
-tg.MainButton.setText('Получить расписание');
-tg.MainButton.onClick(() => {
-    tg.sendData(JSON.stringify({
-        action: 'get_schedule'
-    }));
+// Слушатель смены группы
+groupSelect.addEventListener('change', (e) => {
+    if (e.target.value) renderSchedule(e.target.value);
 });
-tg.MainButton.show();
 
-// Логируем для проверки
-console.log('Web App запущен!');
-console.log('User:', user);
+loadData();
