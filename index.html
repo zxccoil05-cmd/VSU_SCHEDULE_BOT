@@ -2,31 +2,22 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписание ВГУ</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <div id="app">
         <header>
-            <h1 id="fac-name">Расписание</h1>
-            <div class="status" id="status">Подключение...</div>
+            <h1 id="group-name">Загрузка...</h1>
+            <p id="faculty-name"></p>
         </header>
 
-        <div class="controls">
-            <label for="group-select">ГРУППА</label>
-            <select id="group-select">
-                <option value="">Загрузка списка...</option>
-            </select>
-        </div>
-
-        <main id="schedule-container">
-            <div class="empty-state">
-                Выберите группу для просмотра занятий
+        <div id="schedule-container">
             </div>
-        </main>
     </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

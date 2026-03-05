@@ -3,16 +3,14 @@ import requests
 import logging
 from bs4 import BeautifulSoup
 from io import BytesIO
-import asyncio
 import re
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
 logger = logging.getLogger(__name__)
 
 class MultiFacultyParser:
     def __init__(self, faculties_config):
         self.faculties = faculties_config
-        self.cache = {}
+        self.cache = {} 
 
     async def refresh_all(self):
         logger.info("🚀 ЗАПУСК ОБНОВЛЕНИЯ...")
@@ -20,40 +18,37 @@ class MultiFacultyParser:
             data = await self._parse_faculty_page(name, url)
             if data:
                 self.cache[name] = data
-                logger.info(f"✅ {name}: Готово. Групп: {len(data)}")
-            else:
-                self.cache[name] = {}
-                logger.error(f"❌ {name}: Расписание не найдено.")
+                logger.info(f"✅ {name}: Данные обновлены.")
 
     async def _parse_faculty_page(self, fac_name, page_url):
-        all_groups = {}
         try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(page_url, headers=headers, timeout=15)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
+            res = requests.get(page_url, timeout=10)
+            soup = BeautifulSoup(res.content, 'html.parser')
             links = []
             for a in soup.find_all('a', href=True):
-                text = a.get_text().lower().strip()
-                href = a['href'].lower()
-                
-                if not ('.xlsx' in href or '.xls' in href): continue
-                
-                keywords = ['расписание занятий', 'курс', 'дневн']
-
-                blacklist = ['заоч', 'экзам', 'зачет', 'сессия', 'магистр', 'практик', 'план', 'график', 'зачетов', 'курсовые', 'полугодие']
-                
-                if any(word in text or word in href for word in keywords) and not any(bad in text or bad in href for bad in blacklist):
+                href, text = a['href'].lower(), a.get_text().lower()
+                if ('.xls' in href or '.xlsx' in href) and 'расписание' in text:
+                    if any(bad in text for bad in ['заоч', 'экзам']): continue
                     full_url = "https://vsu.by" + a['href'] if a['href'].startswith('/') else a['href']
                     links.append(full_url)
-
+            
+            all_data = {}
             for link in list(set(links)):
-                data = self._parse_excel_file(link)
-                if data: all_groups.update(data)
-            return all_groups
+                file_data = self._parse_excel_file(link)
+                if file_data: all_data.update(file_data)
+            return all_data
         except Exception as e:
-            logger.error(f" Ошибка {fac_name}: {e}")
+            logger.error(f"Ошибка страницы: {e}")
             return None
+
+    def _get_merged_val(self, sheet, row, col):
+        try:
+            cell = sheet.cell(row=row, column=col)
+            for r in sheet.merged_cells.ranges:
+                if cell.coordinate in r:
+                    return str(sheet.cell(row=r.min_row, column=r.min_col).value or "").strip()
+            return str(cell.value or "").strip()
+        except: return ""
 
     def _parse_excel_file(self, url):
         try:
@@ -62,97 +57,94 @@ class MultiFacultyParser:
             sheet = wb.active
             found_data = {}
 
-            # Строки согласно твоим замерам
-            GROUP_ROW = 13
-            SUBGROUP_ROW = 14
-            START_LESSONS_ROW = 15
-
-            for c in range(3, sheet.max_column + 1):
-                # Читаем номер группы (нужен для логов и проверки)
-                group_name = self._get_merged_value(sheet, GROUP_ROW, c)
-                
-                # Читаем название подгруппы (то, что пойдет на кнопку)
-                sub_val = str(sheet.cell(row=SUBGROUP_ROW, column=c).value or "").strip()
-                
-                # Если в 13-й строке пусто, пропускаем колонку
-                if not group_name or group_name == "None" or not re.search(r'\d', group_name):
+            max_c = min(sheet.max_column, 60)
+            for c in range(4, max_c + 1):
+                g_val = self._get_merged_val(sheet, 13, c)
+                if not g_val or not re.search(r'\d', g_val) or len(g_val) > 20:
                     continue
+
+                raw_sub = str(sheet.cell(row=14, column=c).value or "").strip()
                 
-                # УСТАНАВЛИВАЕМ ИМЯ КНОПКИ
-                # Если 14-я строка не пустая, берем только её
-                if sub_val and sub_val != "None":
-                    final_name = sub_val
+                # Если есть инфа о подгруппе (цифра или текст)
+                if raw_sub and raw_sub != "None":
+                    sub_match = re.search(r'\d+', raw_sub)
+                    sub_label = sub_match.group(0) if sub_match else raw_sub
+                    key = f"{g_val} ({sub_label})"
                 else:
-                    # Если вдруг 14-я строка пустая, оставляем номер группы
-                    final_name = group_name
+                    # Если ячейка пустая, но это первая колонка для этой группы
+                    key = g_val
 
-                # Извлекаем уроки
-                lessons = self._extract_lessons(sheet, c, START_LESSONS_ROW)
-                
+                lessons = self._extract_lessons(sheet, c, 15)
                 if lessons:
-                    # Если кнопки с таким именем (например "1") уже есть от другой группы,
-                    # в словаре они могут перезаписаться. 
-                    # Чтобы этого не было, можно добавить невидимый символ или индекс,
-                    # но пока сделаем просто уникальные ключи.
-                    found_data[final_name] = lessons
-                    logger.info(f"   [🎯] Кнопка: {final_name} (из группы {group_name})")
+                    # Если мы уже нашли версию группы с (2), а текущая без метки - пометим её как (1)
+                    if key == g_val and f"{g_val} (2)" in found_data:
+                        key = f"{g_val} (1)"
+                    # И наоборот
+                    if f"{g_val} (2)" == key and g_val in found_data:
+                        old_val = found_data.pop(g_val)
+                        found_data[f"{g_val} (1)"] = old_val
 
+                    found_data[key] = lessons
+            
             return found_data
         except Exception as e:
-            logger.error(f"Ошибка парсинга: {e}")
+            logger.error(f"Ошибка файла: {e}")
             return None
 
-    def _get_merged_value(self, sheet, row, col):
-        """Метод для чтения объединенных ячеек (чтобы видеть группу над обеими подгруппами)"""
-        cell = sheet.cell(row=row, column=col)
-        for merged_range in sheet.merged_cells.ranges:
-            if cell.coordinate in merged_range:
-                return str(sheet.cell(row=merged_range.min_row, column=merged_range.min_col).value or "").strip()
-        return str(cell.value or "").strip()
-
-    def _parse_simple_groups(self, sheet):
-        """Запасной метод, если в файле нет деления на подгруппы"""
-        found_data = {}
-        for r in range(2, 20):
-            found = False
-            for c in range(3, sheet.max_column + 1):
-                val = str(sheet.cell(row=r, column=c).value or "").strip()
-                if val and val != "None" and re.search(r'\d', val) and len(val) < 10:
-                    if any(x in val.lower() for x in ["подгруп", "курс", "декан", "____"]): continue
-                    lessons = self._extract_lessons(sheet, c, r + 1)
-                    if lessons:
-                        found_data[val] = lessons
-                        found = True
-            if found: break
-        return found_data
-
     def _extract_lessons(self, sheet, col, start_row):
-        schedule = {"Понедельник":[], "Вторник":[], "Среда":[], "Четверг":[], "Пятница":[], "Суббота":[]}
-        current_day = None
-        for r in range(start_row, 120):
-            for c_day in [1, 2]:
-                d_val = str(sheet.cell(row=r, column=c_day).value or "").strip().capitalize()
-                if d_val in schedule:
-                    current_day = d_val
-                    break
+        sched = {"Понедельник":[], "Вторник":[], "Среда":[], "Четверг":[], "Пятница":[], "Суббота":[]}
+        cur_day = None
+
+        def format_time(cell_value):
+            raw = str(cell_value or "").strip()
+            if not raw or raw == "None": return ""
+            parts = re.findall(r'\d{1,2}[:.]\d{2}', raw)
+            if len(parts) >= 2:
+                return f"{parts[0].replace('.', ':')}-{parts[1].replace('.', ':')}"
+            return ""
+
+        r = start_row
+        while r < 145:
+            row_inc = 1
+            day_candidate = self._get_merged_val(sheet, r, 1).capitalize()
+            if not day_candidate:
+                day_candidate = self._get_merged_val(sheet, r, 2).capitalize()
             
-            time_val = str(sheet.cell(row=r, column=2).value or "").strip()
-            lesson_val = str(sheet.cell(row=r, column=col).value or "").strip()
+            if day_candidate in sched:
+                cur_day = day_candidate
 
-            if current_day and lesson_val and lesson_val != "None" and len(lesson_val) > 2:
-                # Фильтр для самих уроков, чтобы не попадал мусор в расписание
-                if "_" in lesson_val or "подпись" in lesson_val.lower(): continue
+            l1 = str(sheet.cell(row=r, column=col).value or "").strip()
+            
+            if cur_day and l1 and l1 != "None" and len(l1) > 2:
+                if not any(x in l1.lower() for x in ["____", "декан", "утвержд"]):
+                    time_v = ""
+                    for t_row in [r, r-1, r+1, r-2, r+2]:
+                        try:
+                            time_v = format_time(sheet.cell(row=t_row, column=3).value)
+                            if time_v: break
+                        except: continue
+
+                    l2 = str(sheet.cell(row=r+1, column=col).value or "").strip()
+                    l3 = str(sheet.cell(row=r+2, column=col).value or "").strip()
+
+                    full = l1
+                    if l2 and l2 != "None" and "ауд" not in l2.lower():
+                        full += f" | {l2}"
+                    
+                    aud = ""
+                    if "ауд" in l2.lower(): aud = l2
+                    elif "ауд" in l3.lower(): aud = l3
+                    if aud: full += f" ({aud})"
+                    
+                    sched[cur_day].append({"time": time_v, "name": full})
+                    row_inc = 3
+            
+            r += row_inc
                 
-                schedule[current_day].append({
-                    "time": time_val if time_val != "None" else "",
-                    "name": lesson_val,
-                    "teacher": "", "room": ""
-                })
-        
-        return schedule if any(len(v) > 0 for v in schedule.values()) else None
+        return sched if any(len(v) > 0 for v in sched.values()) else None
 
-    def get_groups_list(self, faculty_name):
-        return sorted(list(self.cache.get(faculty_name, {}).keys()))
+    def get_groups_list(self, fac):
+        return sorted(list(self.cache.get(fac, {}).keys()))
 
-    async def get_faculty_schedule(self, faculty_name):
-        return self.cache.get(faculty_name, {})
+    async def get_faculty_schedule(self, fac):
+        return self.cache.get(fac, {})

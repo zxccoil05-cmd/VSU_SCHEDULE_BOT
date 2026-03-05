@@ -1,83 +1,69 @@
 const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
+tg.expand(); // Разворачиваем на весь экран
 
-// URL твоего бэкенда на Render (замени на свой актуальный)
-const API_BASE_URL = "https://vsu-schedule-bot-code.onrender.com";
-
+// 1. Получаем настройки из URL (которые передал бот)
 const urlParams = new URLSearchParams(window.location.search);
 const faculty = urlParams.get('faculty') || 'ФМиИТ';
-const startGroup = urlParams.get('group') || '';
+const group = urlParams.get('group');
 
-document.getElementById('fac-name').textContent = faculty;
+document.getElementById('group-name').innerText = group || "Группа не выбрана";
+document.getElementById('faculty-name').innerText = faculty;
 
-async function init() {
-    const status = document.getElementById('status');
-    const groupSelect = document.getElementById('group-select');
-    const container = document.getElementById('schedule-container');
-
+// 2. Функция загрузки данных
+async function loadSchedule() {
     try {
-        status.textContent = "⌛ Загрузка данных " + faculty + "...";
-        const response = await fetch(`${API_BASE_URL}/api/schedule?faculty=${encodeURIComponent(faculty)}`);
+        // Укажи здесь URL своего сервера, где запущен бот
+        const API_URL = `https://vsu-schedule-bot-code.onrender.com/api/schedule?faculty=${encodeURIComponent(faculty)}`;
         
-        if (!response.ok) throw new Error("Ошибка сервера");
+        const response = await fetch(API_URL);
+        const allData = await response.json();
         
-        const data = await response.json();
-        const groups = Object.keys(data).sort();
-
-        // Очистка и заполнение списка групп
-        groupSelect.innerHTML = '<option value="">-- Выберите группу --</option>';
-        groups.forEach(g => {
-            const opt = document.createElement('option');
-            opt.value = g;
-            opt.textContent = g;
-            groupSelect.appendChild(opt);
-        });
-
-        status.textContent = "✅ Обновлено";
-
-        // Если группа передана из бота - сразу показываем
-        if (startGroup && data[startGroup]) {
-            groupSelect.value = startGroup;
-            render(data[startGroup]);
-        }
-
-        groupSelect.addEventListener('change', (e) => {
-            if (data[e.target.value]) {
-                render(data[e.target.value]);
-            }
-        });
-
-    } catch (err) {
-        status.textContent = "❌ Ошибка соединения";
-        console.error(err);
+        const groupSchedule = allData[group];
+        renderSchedule(groupSchedule);
+    } catch (error) {
+        console.error("Ошибка загрузки:", error);
+        document.getElementById('schedule-container').innerHTML = "<p>Ошибка загрузки расписания...</p>";
     }
 }
 
-function render(days) {
+// 3. Функция отрисовки
+function renderSchedule(schedule) {
     const container = document.getElementById('schedule-container');
-    container.innerHTML = '';
-    
-    const dayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-    
-    dayNames.forEach(day => {
-        if (days[day] && days[day].length > 0) {
-            const card = document.createElement('div');
-            card.className = 'day-card';
-            card.innerHTML = `<div class="day-title">${day}</div>`;
-            
-            days[day].forEach(lesson => {
-                card.innerHTML += `
-                    <div class="lesson-item">
-                        <div class="lesson-time">${lesson.time}</div>
-                        <div class="lesson-name">${lesson.name}</div>
-                        <div class="lesson-info">🏛 Каб: ${lesson.room} | 👤 ${lesson.teacher}</div>
-                    </div>
-                `;
-            });
-            container.appendChild(card);
-        }
+    container.innerHTML = ''; // Очищаем
+
+    if (!schedule) {
+        container.innerHTML = "<p>Расписание для этой группы не найдено.</p>";
+        return;
+    }
+
+    const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+
+    days.forEach(day => {
+        const lessons = schedule[day];
+        if (!lessons || lessons.length === 0) return;
+
+        // Создаем блок дня
+        const daySection = document.createElement('div');
+        daySection.className = 'day-section';
+        daySection.innerHTML = `<h2>${day}</h2>`;
+
+        const lessonsList = document.createElement('div');
+        lessonsList.className = 'lessons-list';
+
+        lessons.forEach(lesson => {
+            // ТЕПЕРЬ МЫ ИСПОЛЬЗУЕМ lesson.time и lesson.name
+            const lessonItem = document.createElement('div');
+            lessonItem.className = 'lesson-item';
+            lessonItem.innerHTML = `
+                <div class="time">${lesson.time || '--:--'}</div>
+                <div class="details">${lesson.name}</div>
+            `;
+            lessonsList.appendChild(lessonItem);
+        });
+
+        daySection.appendChild(lessonsList);
+        container.appendChild(daySection);
     });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+loadSchedule();
