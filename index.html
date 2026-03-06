@@ -4,158 +4,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ВГУ Расписание</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://sibforms.com/font/line-seed-jp.css">
+    
     <style>
+        /* БАЗОВЫЕ ПЕРЕМЕННЫЕ */
         :root {
-            --primary: #2563eb;
-            --glass: rgba(226, 232, 240, 0.7); 
-            --glass-thick: rgba(241, 245, 249, 0.98);
-            --border: rgba(148, 163, 184, 0.4);
-            --text: #0f172a;
+            --bg: #f1f5f9; --primary: #2563eb; --primary-dark: #1d4ed8;
+            --glass: rgba(226, 232, 240, 0.7); --glass-thick: rgba(241, 245, 249, 0.98);
+            --border: rgba(148, 163, 184, 0.4); --text: #0f172a;
+            --card-bg: #ffffff; --blob1: #3b82f6; --blob2: #93c5fd;
         }
+
+        /* ТЕМЫ (Кратко для экономии места, логика та же) */
+        [data-theme="dark"] { --bg: #0f172a; --primary: #3b82f6; --text: #f1f5f9; --card-bg: #1e293b; --blob1: #1e40af; --blob2: #312e81; --glass: rgba(30, 41, 59, 0.7); --glass-thick: #0f172a; --border: rgba(51, 65, 85, 0.8); }
+        [data-theme="red"] { --bg: #450a0a; --primary: #ef4444; --text: #fee2e2; --card-bg: #7f1d1d; --blob1: #991b1b; --blob2: #450a0a; --border: #991b1b; --glass: rgba(127, 29, 29, 0.6); --glass-thick: #450a0a; }
+        [data-theme="neon"] { --bg: #000000; --primary: #06b6d4; --text: #cffafe; --card-bg: #083344; --blob1: #0e7490; --blob2: #000000; --border: #06b6d4; --glass: rgba(8, 145, 178, 0.2); --glass-thick: #000000; }
+        [data-theme="pink"] { --bg: #fdf2f8; --primary: #db2777; --text: #831843; --card-bg: #ffffff; --blob1: #f472b6; --blob2: #fbcfe8; --border: #f9a8d4; --glass: rgba(251, 207, 232, 0.6); --glass-thick: #fdf2f8; }
+        [data-theme="gray"] { --bg: #1f2937; --primary: #9ca3af; --text: #f9fafb; --card-bg: #374151; --blob1: #111827; --blob2: #4b5563; --border: #4b5563; --glass: rgba(55, 65, 81, 0.7); --glass-thick: #1f2937; }
+        [data-theme="yellow"] { --bg: #fffbeb; --primary: #d97706; --text: #78350f; --card-bg: #ffffff; --blob1: #fbbf24; --blob2: #fef3c7; --border: #fcd34d; --glass: rgba(254, 243, 199, 0.7); --glass-thick: #fffbeb; }
+        [data-theme="forest"] { --bg: #064e3b; --primary: #10b981; --text: #ecfdf5; --card-bg: #065f46; --blob1: #064e3b; --blob2: #065f46; --border: rgba(20, 184, 166, 0.3); --glass: rgba(6, 78, 59, 0.7); --glass-thick: #022c22; }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0; padding: 0;
-            background: #f1f5f9;
-            color: var(--text);
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        /* ЖИВОЙ ФОН */
-        .bg-wrapper { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
-        .bg-blob { position: absolute; border-radius: 50%; filter: blur(40px); opacity: 0.8; }
-        .blob-1 { width: 300px; height: 300px; background: #3b82f6; top: -50px; left: -50px; }
-        .blob-2 { width: 300px; height: 300px; background: #93c5fd; bottom: -50px; right: -50px; }
-
-        /* ГЛАВНЫЙ КОНТЕЙНЕР */
-        .app-viewport { width: 100%; height: 100%; overflow: hidden; }
-        .screens-container { display: flex; width: 200%; height: 100%; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
         
-        .screen { 
-            width: 50%; height: 100%; 
-            display: flex; flex-direction: column;
-            padding: 20px;
+        body {
+            /* ПРИМЕНЯЕМ LINE SEED */
+            font-family: 'LINE Seed JP', sans-serif; 
+            margin: 0; padding: 0;
+            background: var(--bg); color: var(--text); 
+            overflow: hidden; height: 100vh;
+            transition: background 0.4s ease, color 0.4s ease;
+            line-height: 1.4; /* Чуть увеличим интервал для LINE Seed */
         }
 
-        /* ЭКРАН НАСТРОЕК */
-        .setup-content { flex: 1; overflow-y: auto; padding-bottom: 100px; }
-        h1.logo { text-align: center; color: #1e40af; font-weight: 800; margin: 40px 0; }
+        .bg-wrapper { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+        .bg-blob { position: absolute; border-radius: 50%; filter: blur(40px); opacity: 0.8; transition: all 0.5s; }
+        .blob-1 { width: 300px; height: 300px; background: var(--blob1); top: -50px; left: -50px; }
+        .blob-2 { width: 300px; height: 300px; background: var(--blob2); bottom: -50px; right: -50px; }
+
+        .app-viewport { width: 100%; height: 100%; overflow: hidden; }
+        .screens-container { display: flex; width: 300%; height: 100%; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .screen { width: 33.3333%; height: 100%; display: flex; flex-direction: column; padding: 20px; }
+        .setup-content { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+        
+        /* Контейнер логотипа */
+        h1.logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px; /* Расстояние между книгами и текстом */
+            text-align: center; 
+            color: var(--primary); 
+            font-weight: 800; 
+            margin: 40px 0; 
+            font-size: 28px;
+            letter-spacing: -0.5px;
+        }
+
+        /* Стили для иконки книг */
+        .logo-icon {
+            font-size: 32px; /* Чуть больше текста для акцента */
+            display: inline-block;
+            animation: book-bounce 2s ease-in-out infinite;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        /* Плавная анимация покачивания */
+        @keyframes book-bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(-5deg); }
+        }
         
         .glass-card {
             background: var(--glass); backdrop-filter: blur(15px);
             border: 1px solid var(--border); border-radius: 26px;
-            padding: 22px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            padding: 22px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
 
-        select {
+        select, .search-input {
             width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--border); 
-            background: white; font-size: 16px; margin-top: 10px; color: #1e3a8a; font-weight: 600; outline: none;
+            background: var(--card-bg); font-size: 16px; margin-top: 10px; 
+            color: var(--text); font-weight: 700; outline: none;
+            font-family: inherit; /* Чтобы селекты тоже использовали LINE Seed */
         }
 
-        /* НОВАЯ КНОПКА СВЯЗИ В НАСТРОЙКАХ */
-        .admin-link-btn {
-            width: 100%; margin-top: 25px; padding: 16px; border-radius: 18px;
-            background: #ef4444; color: white; border: none; font-weight: 800;
+        .action-btn {
+            width: 100%; margin-top: 15px; padding: 16px; border-radius: 18px;
+            background: var(--primary); color: white; border: none; font-weight: 800;
             font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2); transition: 0.3s;
+            transition: all 0.2s; font-family: inherit;
         }
-        .admin-link-btn:active { transform: scale(0.97); opacity: 0.9; }
+        .action-btn:active { transform: scale(0.95); opacity: 0.9; }
 
-        /* ЭКРАН РАСПИСАНИЯ */
         .schedule-header {
             background: var(--glass-thick); backdrop-filter: blur(10px);
             margin: -20px -20px 0 -20px; padding: 20px 20px 15px 20px;
             border-bottom: 1px solid var(--border); z-index: 10;
         }
-        .days-tabs { display: flex; gap: 6px; width: 100%; max-width: 500px; margin: 0 auto; }
+        .days-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; }
         .day-tab {
-            flex: 1; text-align: center; padding: 12px 0; border-radius: 12px;
-            background: white; color: #1e40af; font-size: 11px; font-weight: 800;
-            transition: 0.2s; border: 1px solid var(--border);
-        }
-        .day-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+                flex: 1; 
+                text-align: center; 
+                padding: 12px 0; 
+                border-radius: 12px;
+                background: var(--card-bg); 
+                color: var(--text); 
+                font-size: 11px; 
+                font-weight: 800;
+                border: 1px solid var(--border); 
+                min-width: 50px;
+                cursor: pointer;
+                
+                /* Анимация всех изменений */
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: scale(1);
+            }
 
-        .schedule-content { flex: 1; overflow-y: auto; padding-top: 20px; padding-bottom: 100px; }
+            /* Эффект при зажатии пальцем */
+            .day-tab:active {
+                transform: scale(0.9);
+                background: var(--glass);
+            }
+
+            /* Активное состояние (тот самый день, который мы смотрим) */
+            .day-tab.active {
+                background: var(--primary); 
+                color: white; 
+                border-color: var(--primary);
+                transform: scale(1.05); /* Легкое увеличение активного дня */
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 2;
+}
+
+        .schedule-content { flex: 1; overflow-y: auto; padding-top: 20px; padding-bottom: 120px; }
         .swiper-track { display: flex; width: 600%; transition: transform 0.4s ease-out; }
         .day-column { width: 16.666%; padding: 0 5px; }
         
-        .lesson-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .time-badge { background: #dbeafe; color: #1e40af; padding: 6px; border-radius: 10px; font-weight: 700; font-size: 11px; min-width: 75px; text-align: center; }
+        .lesson-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .time-badge { background: var(--primary); color: white; padding: 6px; border-radius: 10px; font-weight: 800; font-size: 11px; min-width: 75px; text-align: center; }
+        .group-label { color: var(--primary); font-weight: 800; font-size: 11px; background: var(--glass); padding: 2px 6px; border-radius: 6px; margin-top: 4px; display: inline-block; }
 
-        /* НАВИГАЦИЯ */
-    /* ... (остальные стили оставляем как в предыдущем ответе) ... */
-
-    /* НАВИГАЦИЯ С АНИМАЦИЕЙ */
-            .bottom-nav {
-                position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
-                width: 90%; max-width: 380px; background: white; height: 75px; 
-                border-radius: 28px; display: flex; justify-content: space-around; 
-                align-items: center; box-shadow: 0 12px 35px rgba(0,0,0,0.12); z-index: 4000;
-                border: 1px solid rgba(0,0,0,0.03);
-            }
-
-            .nav-item { 
-                display: flex; flex-direction: column; align-items: center; 
-                color: #94a3b8; cursor: pointer; position: relative;
-                transition: color 0.3s ease;
-                padding: 10px;
-            }
-
-            /* Анимация самой иконки (эмодзи) */
-            .nav-item span:first-child {
-                font-size: 24px;
-                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-                display: inline-block;
-            }
-
-            /* Состояние когда вкладка активна */
-            .nav-item.active { 
-                color: var(--primary); 
-            }
-
-            .nav-item.active span:first-child {
-                transform: translateY(-8px); /* Иконка подпрыгивает выше */
-            }
-
-            .nav-item span:last-child {
-                font-size: 10px;
-                font-weight: 800;
-                margin-top: 4px;
-                letter-spacing: 0.5px;
-            }
-</style>
-
+        .bottom-nav {
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); 
+            width: 92%; max-width: 400px; background: var(--card-bg); height: 75px; 
+            border-radius: 28px; display: flex; justify-content: space-around; 
+            align-items: center; box-shadow: 0 12px 35px rgba(0,0,0,0.2); z-index: 4000;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; cursor: pointer; transition: 0.3s; }
+        .nav-item span:first-child { font-size: 24px; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active span:first-child { transform: translateY(-8px) scale(1.2); }
+        .nav-item span:last-child { font-size: 10px; font-weight: 800; margin-top: 4px; }
     </style>
 </head>
 <body>
-
     <div class="bg-wrapper"><div class="blob-1 bg-blob"></div><div class="blob-2 bg-blob"></div></div>
-
     <div class="app-viewport">
         <div class="screens-container" id="screens-container">
             <section class="screen">
                 <div class="setup-content">
-                    <h1 class="logo">ВГУ Mobile</h1>
+                    <h1 class="logo">
+                        <span class="logo-icon">📚</span> 
+                                ВГУ Mobile
+                    </h1>
                     <div class="glass-card">
                         <label style="font-weight:700;">📍 Факультет</label>
                         <select id="fac-select"><option disabled selected>Загрузка...</option></select>
-                        
                         <div id="group-area" style="display:none; margin-top: 25px;">
                             <label style="font-weight:700;">👥 Группа</label>
                             <select id="group-select"></select>
-                            
-                            <button class="admin-link-btn" onclick="window.open('https://t.me/wch8h', '_blank')">
-                                <span>⚠️ Сообщить об ошибке</span>
-                            </button>
+                            <button class="action-btn" style="background:#ef4444;" onclick="window.open('https://t.me/wch8h', '_blank')">⚠️Сообщить об ошибке</button>
                         </div>
+                    </div>
+                    <div class="glass-card">
+                        <label style="font-weight:700;">🎨 Оформление</label>
+                        <select id="theme-select" onchange="setTheme(this.value)">
+                            <option value="light">Стандартная</option>
+                            <option value="dark">Темная ночь</option>
+                            <option value="forest">Зеленый лес</option>
+                            <option value="red">Рубиновая</option>
+                            <option value="neon">Неоновый кибер</option>
+                            <option value="pink">Розовая сакура</option>
+                            <option value="gray">Стальной серый</option>
+                            <option value="yellow">Янтарная</option>
+                        </select>
                     </div>
                 </div>
             </section>
-
             <section class="screen">
                 <div class="schedule-header">
                     <div class="days-tabs" id="days-tabs">
@@ -167,112 +202,92 @@
                         <div class="day-tab" onclick="goToDay(5)">СБ</div>
                     </div>
                 </div>
-                <div class="schedule-content" id="schedule-scroll-area">
+                <div class="schedule-content">
                     <div id="schedule-swiper" style="overflow:hidden">
                         <div class="swiper-track" id="schedule-track"></div>
                     </div>
                 </div>
             </section>
+            <section class="screen">
+                <div class="setup-content">
+                    <h1 class="logo">Поиск</h1>
+                    <div class="glass-card">
+                        <label style="font-weight:700;">👨‍🏫 Преподаватель</label>
+                        <input type="text" id="teacher-input" class="search-input" placeholder="Фамилия...">
+                        <button class="action-btn" onclick="searchTeacher()">🔍 Найти</button>
+                    </div>
+                    <div id="teacher-results"></div>
+                </div>
+            </section>
         </div>
     </div>
-
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchScreen(0)"><span>⚙️</span><span style="font-size:10px; font-weight:700;">ОПЦИИ</span></div>
-        <div class="nav-item" onclick="switchScreen(1)"><span>📅</span><span style="font-size:10px; font-weight:700;">ПАРЫ</span></div>
+        <div class="nav-item active" onclick="switchScreen(0)"><span>⚙️</span><span>ОПЦИИ</span></div>
+        <div class="nav-item" onclick="switchScreen(1)"><span>📅</span><span>ПАРЫ</span></div>
+        <div class="nav-item" onclick="switchScreen(2)"><span>🔍</span><span>ПОИСК</span></div>
     </div>
 
     <script>
+        /* Весь JS из предыдущего кода */
         const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
-        let currentDayIndex = 0;
-        let touchStartX = 0;
-
-        function switchScreen(idx) {
-            const container = document.getElementById('screens-container');
-            // Плавный сдвиг экранов
-            container.style.transform = `translateX(-${idx * 50}%)`;
-            
-            // Обновляем классы навигации
-            const items = document.querySelectorAll('.nav-item');
-            items.forEach((n, i) => {
-                if(i === idx) {
-                    n.classList.add('active');
-                } else {
-                    n.classList.remove('active');
+        let currentDayIndex = 0; let touchStartX = 0; let teacherCache = {};
+        function setTheme(theme) { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('vsu_theme', theme); document.getElementById('theme-select').value = theme; }
+        function switchScreen(idx) { document.getElementById('screens-container').style.transform = `translateX(-${idx * 33.3333}%)`; document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === idx)); }
+        function goToDay(idx) { if (idx < 0 || idx > 5) return; currentDayIndex = idx; localStorage.setItem('vsu_last_day', idx); document.getElementById('schedule-track').style.transform = `translateX(-${idx * 16.666}%)`; document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx)); }
+        async function searchTeacher() {
+            const name = document.getElementById('teacher-input').value.trim();
+            if(name.length < 3) return alert("Введите 3 буквы");
+            const resDiv = document.getElementById('teacher-results');
+            resDiv.innerHTML = '<div class="glass-card">🔍 Поиск...</div>';
+            try {
+                const r = await fetch(`${API_BASE}/teacher/${encodeURIComponent(name)}`);
+                const data = await r.json();
+                if(!data.schedule || Object.keys(data.schedule).length === 0) { resDiv.innerHTML = '<div class="glass-card">Не найдено</div>'; return; }
+                teacherCache = {};
+                Object.entries(data.schedule).forEach(([day, lessons]) => {
+                    lessons.forEach(l => {
+                        const tName = l.teacher || "Неизвестно";
+                        if (!teacherCache[tName]) teacherCache[tName] = {};
+                        if (!teacherCache[tName][day]) teacherCache[tName][day] = [];
+                        teacherCache[tName][day].push(l);
+                    });
+                });
+                const names = Object.keys(teacherCache).sort();
+                if (names.length === 1) renderTeacher(names[0]);
+                else {
+                    let html = '<div class="glass-card"><b>Выбор:</b>';
+                    names.forEach(n => html += `<button class="action-btn" style="background:var(--card-bg); color:var(--text); border:1px solid var(--primary); margin-top:8px;" onclick="renderTeacher('${n.replace(/'/g, "\\'")}')">${n}</button>`);
+                    resDiv.innerHTML = html + '</div>';
                 }
-            });
+            } catch(e) { resDiv.innerHTML = 'Ошибка'; }
         }
-
-        function goToDay(idx) {
-            if (idx < 0 || idx > 5) return;
-            currentDayIndex = idx;
-            document.getElementById('schedule-track').style.transform = `translateX(-${idx * 16.666}%)`;
-            document.getElementById('days-tabs').querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+        function renderTeacher(tName) {
+            const resDiv = document.getElementById('teacher-results');
+            const sched = teacherCache[tName];
+            const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+            let html = `<div style="text-align:center; font-weight:800; margin-bottom:10px;">${tName}</div><button class="action-btn" style="background:#64748b; margin-top:0; margin-bottom:15px; height:45px;" onclick="searchTeacher()">⬅️ Назад</button>`;
+            days.forEach(day => { if(sched[day]) { html += `<div class="glass-card"><div style="font-weight:800; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:10px;">${day.toUpperCase()}</div>`; sched[day].sort((a,b)=>a.time.localeCompare(b.time)).forEach(l => { html += `<div class="lesson-row"><div class="time-badge">${l.time.replace(/[()]/g,'')}</div><div><b>${l.name}</b><br><small>${l.room}</small><br><span class="group-label">👥 ${l.group}</span></div></div>`; }); html += `</div>`; } });
+            resDiv.innerHTML = html;
         }
-
         async function loadSchedule(group) {
             const track = document.getElementById('schedule-track');
-            track.innerHTML = '<div class="day-column"><div class="glass-card">🔄 Загрузка...</div></div>';
+            track.innerHTML = '<div class="day-column"><div class="glass-card">Загрузка...</div></div>';
             try {
                 const r = await fetch(`${API_BASE}/schedule/${encodeURIComponent(group)}`);
                 const data = await r.json();
                 const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-                track.innerHTML = days.map(day => {
-                    const lessons = data.schedule[day] || [];
-                    return `<div class="day-column"><div class="glass-card">
-                        <div style="font-weight:800; color:#1e40af; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:12px;">${day.toUpperCase()}</div>
-                        ${lessons.length ? lessons.map(l => `
-                            <div class="lesson-row">
-                                <div class="time-badge">${l.time.replace(/[()]/g,'')}</div>
-                                <div><b style="font-size:14px;">${l.name}</b><br><small style="color:#64748b">${l.room} | ${l.teacher}</small></div>
-                            </div>
-                        `).join('') : '<div style="text-align:center; padding:20px; color:#94a3b8;">Пар нет 🎉</div>'}
-                    </div></div>`;
-                }).join('');
-                let d = new Date().getDay();
-                goToDay(d === 0 ? 0 : d - 1);
+                track.innerHTML = days.map(day => { const lessons = data.schedule[day] || []; return `<div class="day-column"><div class="glass-card"><div style="font-weight:800; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:10px;">${day.toUpperCase()}</div>${lessons.length ? lessons.map(l => `<div class="lesson-row"><div class="time-badge">${l.time.replace(/[()]/g,'')}</div><div><b>${l.name}</b><br><small>${l.room} | ${l.teacher}</small></div></div>`).join('') : 'Пар нет'}</div></div>`; }).join('');
+                const lastDay = localStorage.getItem('vsu_last_day');
+                if(lastDay !== null) goToDay(parseInt(lastDay));
+                else { let d = new Date().getDay(); goToDay(d === 0 ? 0 : d - 1); }
                 switchScreen(1);
-            } catch (e) { track.innerHTML = '<div class="day-column"><div class="glass-card">Ошибка API</div></div>'; }
+            } catch (e) { track.innerHTML = 'Ошибка'; }
         }
-
-        async function init() {
-            const fSel = document.getElementById('fac-select');
-            try {
-                const r = await fetch(`${API_BASE}/faculties`);
-                const data = await r.json();
-                fSel.innerHTML = '<option disabled selected>Выберите факультет...</option>' + 
-                    data.faculties.map(f => `<option value="${f}">${f}</option>`).join('');
-            } catch (e) { fSel.innerHTML = '<option>Ошибка сети</option>'; }
-
-            const savedF = localStorage.getItem('vsu_fac'), savedG = localStorage.getItem('vsu_group');
-            if (savedF && savedG) {
-                fSel.value = savedF; await loadGroups(savedF);
-                document.getElementById('group-select').value = savedG; loadSchedule(savedG);
-            }
-        }
-
-        async function loadGroups(fac) {
-            const gSel = document.getElementById('group-select');
-            document.getElementById('group-area').style.display = 'block';
-            gSel.innerHTML = '<option>Загрузка...</option>';
-            const r = await fetch(`${API_BASE}/faculties/${fac}/groups`);
-            const data = await r.json();
-            gSel.innerHTML = data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
-        }
-
-        document.getElementById('fac-select').onchange = (e) => {
-            localStorage.setItem('vsu_fac', e.target.value); loadGroups(e.target.value);
-        };
-        document.getElementById('group-select').onchange = (e) => {
-            localStorage.setItem('vsu_group', e.target.value); loadSchedule(e.target.value);
-        };
-
-        const swiper = document.getElementById('schedule-swiper');
-        swiper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, {passive: true});
-        swiper.addEventListener('touchend', e => {
-            const diff = touchStartX - e.changedTouches[0].clientX;
-            if (Math.abs(diff) > 70) diff > 0 ? goToDay(currentDayIndex + 1) : goToDay(currentDayIndex - 1);
-        });
-
+        async function loadGroups(fac) { const gSel = document.getElementById('group-select'); document.getElementById('group-area').style.display = 'block'; gSel.innerHTML = '<option>...</option>'; const r = await fetch(`${API_BASE}/faculties/${fac}/groups`); const data = await r.json(); gSel.innerHTML = data.groups.map(g => `<option value="${g}">${g}</option>`).join(''); }
+        async function init() { setTheme(localStorage.getItem('vsu_theme') || 'light'); const fSel = document.getElementById('fac-select'); try { const r = await fetch(`${API_BASE}/faculties`); const data = await r.json(); fSel.innerHTML = '<option disabled selected>Факультет...</option>' + data.faculties.map(f => `<option value="${f}">${f}</option>`).join(''); } catch (e) { fSel.innerHTML = '<option>Ошибка</option>'; } const savedF = localStorage.getItem('vsu_fac'), savedG = localStorage.getItem('vsu_group'); if (savedF && savedG) { fSel.value = savedF; await loadGroups(savedF); document.getElementById('group-select').value = savedG; loadSchedule(savedG); } }
+        document.getElementById('fac-select').onchange = (e) => { localStorage.setItem('vsu_fac', e.target.value); loadGroups(e.target.value); };
+        document.getElementById('group-select').onchange = (e) => { localStorage.setItem('vsu_group', e.target.value); loadSchedule(e.target.value); };
+        const swiper = document.getElementById('schedule-swiper'); swiper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX); swiper.addEventListener('touchend', e => { const diff = touchStartX - e.changedTouches[0].clientX; if (Math.abs(diff) > 70) diff > 0 ? goToDay(currentDayIndex + 1) : goToDay(currentDayIndex - 1); });
         init();
     </script>
 </body>
