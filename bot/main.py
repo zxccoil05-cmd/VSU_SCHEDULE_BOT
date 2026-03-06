@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import uvicorn
+import os
+import dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from aiogram import Bot, Dispatcher, types
@@ -8,8 +10,6 @@ from aiogram.filters import Command
 from aiogram.types import WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from contextlib import asynccontextmanager
-import dotenv
-import os
 from aiogram.client.session.aiohttp import AiohttpSession
 
 from factory import ScheduleFactory
@@ -27,9 +27,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 async def schedule_refresher():
     """Фоновый цикл: обновляет данные каждые 6 часов"""
-    # Ждем немного перед первым циклом, чтобы не мешать старту сервера
     await asyncio.sleep(10) 
-    
     while True:
         try:
             print("🕒 Наступило время планового обновления (раз в 6 часов)...")
@@ -38,18 +36,15 @@ async def schedule_refresher():
         except Exception as e:
             print(f"❌ Ошибка при плановом обновлении: {e}")
         
-        # Спим 6 часов (6 * 60 * 60 = 21600 секунд)
         await asyncio.sleep(21600)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Запускаем немедленное обновление при старте
+    # Запускаем немедленное обновление при старте
     asyncio.create_task(factory.update_all())
-    
-    # 2. Запускаем бесконечный цикл обновления раз в 6 часов
+    # Запускаем бесконечный цикл обновления
     asyncio.create_task(schedule_refresher())
-    
-    print("🚀 Фоновое обновление (разовое + циклическое) запущено.")
+    print("🚀 Фоновое обновление запущено.")
     yield
 
 # --- ИНИЦИАЛИЗАЦИЯ APP ---
@@ -80,6 +75,51 @@ async def get_sched(group: str):
     sched = factory.get_schedule(group)
     if not sched: raise HTTPException(404)
     return {"schedule": sched}
+
+# НОВЫЙ ЭНДПОИНТ: ПОИСК ПО ПРЕПОДАВАТЕЛЮ
+@app.get("/api/teacher/{name}")
+async def search_teacher(name: str):
+    query = name.lower().strip()
+    if len(query) < 3:
+        raise HTTPException(400, "Минимум 3 символа для поиска")
+
+    teacher_schedule = {}
+    
+    # Проходим по всем факультетам и их группам в памяти
+    for fac_name, parser in factory.parsers.items():
+        for group in parser.get_groups():
+            sched = factory.get_schedule(group)
+            if not sched: continue
+            
+            for day, lessons in sched.items():
+                for lesson in lessons:
+                    # Ищем совпадение в поле преподавателя
+                    current_teacher = lesson.get('teacher', '').lower()
+                    if query in current_teacher:
+                        if day not in teacher_schedule:
+                            teacher_schedule[day] = []
+                        
+                        # Создаем копию занятия для безопасного изменения
+                        lesson_info = lesson.copy()
+                        lesson_info['group'] = group
+                        
+                        # Проверяем на дубликаты (чтобы не дублировать потоковые лекции)
+                        duplicate = next((l for l in teacher_schedule[day] 
+                                        if l['time'] == lesson_info['time'] and 
+                                           l['name'] == lesson_info['name']), None)
+                        
+                        if duplicate:
+                            # Если такая пара уже есть, просто дописываем еще одну группу
+                            if group not in duplicate['group']:
+                                duplicate['group'] += f", {group}"
+                        else:
+                            teacher_schedule[day].append(lesson_info)
+
+    # Сортировка по времени
+    for day in teacher_schedule:
+        teacher_schedule[day].sort(key=lambda x: x.get('time', ''))
+
+    return {"schedule": teacher_schedule}
 
 # --- БОТ ---
 
@@ -119,22 +159,16 @@ async def main():
     )
     server = uvicorn.Server(config)
 
-    print("🤖 Запуск инфраструктуры...")
-
     server_task = asyncio.create_task(server.serve())
     
     async def start_bot():
         while True:
             try:
-                print("🔹 Попытка подключения к Telegram...")
                 await dp.start_polling(bot, skip_updates=True)
             except Exception as e:
-                print(f"⚠️ Ошибка бота: {e}")
                 await asyncio.sleep(5)
 
     bot_task = asyncio.create_task(start_bot())
-
-    # Ждем завершения сервера
     await server_task
 
 if __name__ == "__main__":
