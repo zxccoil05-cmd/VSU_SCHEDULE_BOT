@@ -2,15 +2,16 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ВГУ Расписание PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ВГУ Mobile PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #3498db;
-            --accent: #2980b9;
-            --glass: rgba(255, 255, 255, 0.8);
-            --text: #1e293b;
+            --primary: #2563eb;
+            --glass: rgba(226, 232, 240, 0.5); /* Серое стекло */
+            --glass-thick: rgba(241, 245, 249, 0.9);
+            --border: rgba(148, 163, 184, 0.3);
+            --text: #0f172a;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -18,131 +19,259 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0; padding: 0;
-            background: #e0f2fe;
+            background: #f1f5f9;
             color: var(--text);
-            min-height: 100vh;
-            display: flex; justify-content: center;
-        }
-
-        /* Анимированный фон */
-        .bg-animate {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            background: linear-gradient(45deg, #e0f2fe 0%, #bae6fd 100%);
             overflow: hidden;
-        }
-        .blob {
-            position: absolute; width: 600px; height: 600px;
-            background: rgba(52, 152, 219, 0.2);
-            filter: blur(80px); border-radius: 50%;
-            animation: move 20s infinite alternate;
-        }
-        @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
-
-        .app-container {
-            width: 100%; max-width: 500px;
-            padding: 20px 20px 100px 20px;
+            height: 100vh;
         }
 
-        .screen { display: none; animation: fadeIn 0.4s ease; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* КРАСИВЫЙ ФОН */
+        .bg-wrapper { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+        .bg-blob {
+            position: absolute; border-radius: 50%; filter: blur(40px);
+            opacity: 0.8; animation: float 15s infinite alternate ease-in-out;
+        }
+        .blob-1 { width: 250px; height: 250px; background: #3b82f6; top: 10%; left: 10%; }
+        .blob-2 { width: 300px; height: 300px; background: #93c5fd; bottom: 15%; right: 5%; animation-delay: -4s; }
+        .blob-3 { width: 200px; height: 200px; background: #2563eb; top: 50%; left: 60%; animation-delay: -8s; }
 
-        /* Стеклянные карточки */
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 100px) scale(1.1); }
+        }
+
+        /* КНОПКА СВЯЗИ (СПРАВА) */
+        .report-wrapper {
+            position: fixed; top: 20px; right: 20px; z-index: 3000;
+            display: flex; flex-direction: row-reverse; align-items: center; gap: 10px;
+        }
+        .info-icon {
+            width: 36px; height: 36px; border-radius: 12px;
+            background: var(--glass-thick); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); display: flex;
+            align-items: center; justify-content: center;
+            font-weight: 800; color: var(--primary); cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .report-btn {
+            background: #ef4444; color: white; border: none;
+            padding: 10px 18px; border-radius: 14px; font-weight: 700;
+            font-size: 13px; opacity: 0; transform: translateX(20px) scale(0.8);
+            pointer-events: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+        .report-btn.show { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
+
+        /* ИНТЕРФЕЙС ПРИЛОЖЕНИЯ */
+        .app-viewport { width: 100%; height: 100%; overflow: hidden; }
+        .screens-container { display: flex; width: 200%; height: 100%; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .screen { width: 50%; height: 100%; overflow-y: auto; padding: 80px 20px 130px 20px; }
+
         .glass-card {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.4);
-            border-radius: 28px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            background: var(--glass); backdrop-filter: blur(15px);
+            border: 1px solid var(--border); border-radius: 28px;
+            padding: 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); margin-bottom: 20px;
         }
+
+        h1.logo { text-align: center; color: #1e40af; font-weight: 800; margin-bottom: 30px; }
 
         select {
-            width: 100%; padding: 15px; border-radius: 16px;
-            border: 2px solid #cbd5e1; background: white;
-            font-size: 16px; margin-bottom: 20px; outline: none;
+            width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--border); 
+            background: white; font-size: 16px; margin-top: 10px; outline: none; color: #1e3a8a; font-weight: 600;
         }
 
-        /* Стили дня */
-        .day-card {
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.5);
-            border-radius: 24px;
-            padding: 20px; margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+        /* ШАПКА С ДНЯМИ */
+        .days-nav {
+            position: sticky; top: -80px; z-index: 10; padding: 15px 5px;
+            margin: 0 -20px 20px -20px; background: var(--glass-thick);
+            backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
         }
-        .day-title {
-            font-weight: 800; color: var(--accent);
-            border-bottom: 1px solid rgba(52,152,219,0.2);
-            padding-bottom: 10px; margin-bottom: 15px;
+        .days-tabs { display: flex; justify-content: center; gap: 6px; padding-right: 45px; }
+        .day-tab {
+            padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,0.6);
+            color: #1e40af; font-size: 12px; font-weight: 800; transition: 0.3s;
         }
-        .lesson-row {
-            display: flex; gap: 15px; padding: 12px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.03);
-        }
-        .lesson-row:last-child { border-bottom: none; }
-        .time-badge {
-            background: #eff6ff; color: var(--primary);
-            padding: 6px; border-radius: 10px; font-weight: 700;
-            font-size: 12px; min-width: 80px; text-align: center; height: fit-content;
-        }
+        .day-tab.active { background: var(--primary); color: white; transform: scale(1.05); }
 
-        /* Нижняя панель */
+        /* РАСПИСАНИЕ */
+        .schedule-swiper { width: 100%; overflow: hidden; }
+        .swiper-track { display: flex; width: 600%; transition: transform 0.5s ease-out; }
+        .day-column { width: 16.666%; padding: 0 5px; }
+        .day-card { background: var(--glass); border-radius: 26px; padding: 20px; border: 1px solid var(--border); }
+        .day-title { font-weight: 800; color: #1e3a8a; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 10px; margin-bottom: 15px; }
+        .lesson-row { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .time-badge { background: #dbeafe; color: #1e40af; padding: 6px; border-radius: 12px; font-weight: 700; font-size: 11px; min-width: 75px; text-align: center; }
+
+        /* НАВИГАЦИЯ */
         .bottom-nav {
-            position: fixed; bottom: 20px; left: 50%;
-            transform: translateX(-50%); width: 90%; max-width: 400px;
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
-            height: 70px; border-radius: 25px;
-            display: flex; justify-content: space-around; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 1000;
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 380px;
+            background: white; height: 75px; border-radius: 30px; display: flex;
+            justify-content: space-around; align-items: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); z-index: 1000;
         }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            color: #94a3b8; cursor: pointer; transition: 0.3s;
-        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; transition: 0.3s; cursor: pointer; }
         .nav-item.active { color: var(--primary); transform: translateY(-5px); }
-        .nav-icon { font-size: 24px; }
-        .nav-text { font-size: 11px; font-weight: 600; }
+
+        /* МЯГКИЙ РИППЛ */
+        .ripple {
+            position: absolute; border-radius: 50%; background: rgba(37, 99, 235, 0.15); 
+            filter: blur(12px); transform: scale(0); animation: ripple-anim 0.5s ease-out; pointer-events: none; z-index: 9999;
+        }
+        @keyframes ripple-anim { from { transform: scale(0.2); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
     </style>
 </head>
-<body>
-    <div class="bg-animate">
-        <div class="blob" style="top: -5%; left: -5%;"></div>
-        <div class="blob" style="bottom: -5%; right: -5%; background: rgba(186, 230, 253, 0.4);"></div>
+<body onclick="handleGlobalClick(event)">
+
+    <div class="bg-wrapper"><div class="bg-blob blob-1"></div><div class="bg-blob blob-2"></div><div class="bg-blob blob-3"></div></div>
+
+    <div class="report-wrapper">
+        <div class="info-icon" onclick="toggleReportBtn(event)">!</div>
+        <button class="report-btn" id="report-btn" onclick="sendReport()">Связаться 💬</button>
     </div>
 
-    <div class="app-container">
-        <h1 style="text-align:center; color: var(--accent);">ВГУ Mobile</h1>
-
-        <div id="screen-setup" class="screen active">
-            <div class="glass-card">
-                <label style="font-weight:600; display:block; margin-bottom:10px;">📍 Факультет</label>
-                <select id="fac-select"><option value="" disabled selected>Загрузка...</option></select>
-                
-                <div id="group-area" style="display:none;">
-                    <label style="font-weight:600; display:block; margin-bottom:10px;">👥 Группа</label>
-                    <select id="group-select"></select>
+    <div class="app-viewport">
+        <div class="screens-container" id="screens-container">
+            <section class="screen">
+                <h1 class="logo">ВГУ Mobile</h1>
+                <div class="glass-card">
+                    <label style="font-weight:700; color: #1e3a8a;">📍 Факультет</label>
+                    <select id="fac-select"><option disabled selected>Загрузка...</option></select>
+                    <div id="group-area" style="display:none; margin-top: 25px;">
+                        <label style="font-weight:700; color: #1e3a8a;">👥 Группа</label>
+                        <select id="group-select"></select>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <div id="screen-schedule" class="screen">
-            <div id="schedule-render"></div>
+            <section class="screen">
+                <div class="days-nav">
+                    <div class="days-tabs" id="days-tabs">
+                        <div class="day-tab" onclick="goToDay(0)">ПН</div>
+                        <div class="day-tab" onclick="goToDay(1)">ВТ</div>
+                        <div class="day-tab" onclick="goToDay(2)">СР</div>
+                        <div class="day-tab" onclick="goToDay(3)">ЧТ</div>
+                        <div class="day-tab" onclick="goToDay(4)">ПТ</div>
+                        <div class="day-tab" onclick="goToDay(5)">СБ</div>
+                    </div>
+                </div>
+                <div class="schedule-swiper" id="schedule-swiper">
+                    <div class="swiper-track" id="schedule-track"></div>
+                </div>
+            </section>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchScreen('setup', this)">
-            <span class="nav-icon">⚙️</span><span class="nav-text">Настройки</span>
-        </div>
-        <div class="nav-item" onclick="switchScreen('schedule', this)">
-            <span class="nav-icon">📅</span><span class="nav-text">Расписание</span>
-        </div>
+        <div class="nav-item active" onclick="switchScreen(0)"><span>⚙️</span><span style="font-size:10px; font-weight:700;">ОПЦИИ</span></div>
+        <div class="nav-item" onclick="switchScreen(1)"><span>📅</span><span style="font-size:10px; font-weight:700;">ПАРЫ</span></div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
+        let currentDayIndex = 0;
+        let touchStartX = 0;
+
+        function toggleReportBtn(e) {
+            e.stopPropagation();
+            document.getElementById('report-btn').classList.toggle('show');
+        }
+
+        function handleGlobalClick(e) {
+            const ripple = document.createElement("div");
+            ripple.className = "ripple";
+            const size = 50;
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${e.clientX - size/2}px`;
+            ripple.style.top = `${e.clientY - size/2}px`;
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 500);
+
+            if (!e.target.closest('.report-wrapper')) {
+                document.getElementById('report-btn').classList.remove('show');
+            }
+        }
+
+        function sendReport() {
+            window.open("https://t.me/@wch8h", "_blank");
+        }
+
+        function switchScreen(idx) {
+            document.getElementById('screens-container').style.transform = `translateX(-${idx * 50}%)`;
+            document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === idx));
+        }
+
+        function goToDay(idx) {
+            if (idx < 0 || idx > 5) return;
+            currentDayIndex = idx;
+            document.getElementById('schedule-track').style.transform = `translateX(-${idx * 16.666}%)`;
+            document.getElementById('days-tabs').querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+        }
+
+        async function loadSchedule(group) {
+            const track = document.getElementById('schedule-track');
+            track.innerHTML = '<div class="day-column"><div class="day-card">🔄 Грузим...</div></div>';
+            try {
+                const r = await fetch(`${API_BASE}/schedule/${encodeURIComponent(group)}`);
+                const data = await r.json();
+                const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+                track.innerHTML = days.map(day => {
+                    const lessons = data.schedule[day] || [];
+                    return `
+                        <div class="day-column"><div class="day-card">
+                            <div class="day-title">${day.toUpperCase()}</div>
+                            ${lessons.length ? lessons.map(l => `
+                                <div class="lesson-row">
+                                    <div class="time-badge">${l.time.replace(/[()]/g,'')}</div>
+                                    <div><b>${l.name}</b><br><small>${l.room} | ${l.teacher}</small></div>
+                                </div>
+                            `).join('') : '<div style="text-align:center; padding:20px;">Пар нет 🎉</div>'}
+                        </div></div>`;
+                }).join('');
+                let d = new Date().getDay();
+                goToDay(d === 0 ? 0 : d - 1);
+                switchScreen(1);
+            } catch (e) { track.innerHTML = '<div class="day-column"><div class="day-card">❌ Ошибка</div></div>'; }
+        }
+
+        async function init() {
+            const fSel = document.getElementById('fac-select');
+            try {
+                const r = await fetch(`${API_BASE}/faculties`);
+                const data = await r.json();
+                fSel.innerHTML = '<option disabled selected>Выберите факультет...</option>' + 
+                    data.faculties.map(f => `<option value="${f}">${f}</option>`).join('');
+            } catch (e) { fSel.innerHTML = '<option>Ошибка сети</option>'; }
+
+            const savedF = localStorage.getItem('vsu_fac'), savedG = localStorage.getItem('vsu_group');
+            if (savedF && savedG) {
+                fSel.value = savedF; await loadGroups(savedF);
+                document.getElementById('group-select').value = savedG; loadSchedule(savedG);
+            }
+        }
+
+        async function loadGroups(fac) {
+            const gSel = document.getElementById('group-select');
+            document.getElementById('group-area').style.display = 'block';
+            gSel.innerHTML = '<option>Загрузка...</option>';
+            const r = await fetch(`${API_BASE}/faculties/${fac}/groups`);
+            const data = await r.json();
+            gSel.innerHTML = data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
+        }
+
+        document.getElementById('fac-select').onchange = (e) => {
+            localStorage.setItem('vsu_fac', e.target.value); loadGroups(e.target.value);
+        };
+        document.getElementById('group-select').onchange = (e) => {
+            localStorage.setItem('vsu_group', e.target.value); loadSchedule(e.target.value);
+        };
+
+        const swiper = document.getElementById('schedule-swiper');
+        swiper.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, {passive: true});
+        swiper.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 60) diff > 0 ? goToDay(currentDayIndex + 1) : goToDay(currentDayIndex - 1);
+        });
+
+        init();
+    </script>
 </body>
 </html>
