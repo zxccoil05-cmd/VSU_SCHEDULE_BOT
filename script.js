@@ -19,7 +19,7 @@ function handleGlobalClick(event) {
 
 function sendReport() {
     // ЗАМЕНИ НА СВОЙ TG (например, https://t.me/durov)
-    const myContact = "https://t.me/@wch8h"; 
+    const myContact = "https://t.me/wch8h"; 
     
     document.getElementById('report-btn').classList.remove('show');
     window.open(myContact, '_blank');
