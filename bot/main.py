@@ -32,8 +32,12 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("⏳ Загрузка расписаний ВГУ...")
-    await factory.update_all()
+    # КЛЮЧЕВОЙ МОМЕНТ: 
+    # Используем create_task, чтобы парсинг ушел в фон.
+    # Это позволит lifespan завершиться МГНОВЕННО, 
+    # и сервер uvicorn сразу откроет порт 10000.
+    asyncio.create_task(factory.update_all())
+    print("🚀 Фоновое обновление запущено. Порт открывается...")
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -106,15 +110,21 @@ async def cmd_start(message: types.Message):
 # --- ЗАПУСК ---
 
 async def main():
-    # Настройка порта для Render
-    port = int(os.environ.get("PORT", 8000))
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=port, loop="asyncio")
+    # Render использует порт 10000 или берет из PORT
+    port = int(os.environ.get("PORT", 10000))
+    
+    config = uvicorn.Config(
+        app, 
+        host="0.0.0.0", 
+        port=port, 
+        loop="asyncio",
+        timeout_keep_alive=0
+    )
     server = uvicorn.Server(config)
+
+    print("🤖 Запуск сервера и бота...")
     
-    print("🚀 Запуск сервера и бота...")
-    
-    # Запускаем сервер и бот. 
-    # skip_updates=True поможет не захлебнуться в старых сообщениях при старте
+    # Запускаем только ОДИН раз через gather
     try:
         await asyncio.gather(
             server.serve(),
@@ -122,7 +132,6 @@ async def main():
         )
     except Exception as e:
         logging.error(f"Критическая ошибка: {e}")
-    await asyncio.gather(server.serve(), dp.start_polling(bot))
 
 if __name__ == "__main__":
     asyncio.run(main())
