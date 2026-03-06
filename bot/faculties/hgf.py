@@ -9,12 +9,12 @@ logger = logging.getLogger(__name__)
 
 class HGFParser:
     def __init__(self):
-        # Актуальная ссылка на ХГФ
+        # Ссылка на страницу расписания факультета
         self.base_page_url = "https://vsu.by/universitet/fakultety/khudozhestvenno-graficheskij/raspisanie.html"
         self.cache = {}
 
     def _get_value(self, sheet, row, col):
-        """Твоя оригинальная функция для пробития объединенных ячеек"""
+        """Пробивает объединенные ячейки для получения значения"""
         for merged in sheet.merged_cells.ranges:
             if row in range(merged.min_row, merged.max_row + 1) and \
                col in range(merged.min_col, merged.max_col + 1):
@@ -22,7 +22,7 @@ class HGFParser:
         return sheet.cell(row=row, column=col).value
 
     async def _find_all_links(self):
-        """Ищем все файлы дневной формы ХГФ"""
+        """Ищет только актуальные файлы ДФПО, игнорируя мусор"""
         try:
             headers = {'User-Agent': 'Mozilla/5.0'}
             response = requests.get(self.base_page_url, headers=headers, timeout=15)
@@ -31,28 +31,32 @@ class HGFParser:
             links = soup.find_all('a', href=True)
             
             found_urls = []
-            # Фильтр для отсева лишнего
-            black_list = ["заоч", "зфо", "зфпо", "зачет", "экзамен", "сессия", "магистр"]
+            # Стоп-слова для отсева лишних файлов
+            black_list = ["заоч", "зфо", "зфпо", "зачет", "экзамен", "сессия", "магистр", "зач_", "экз_"]
 
             for l in links:
                 text = l.get_text(separator=" ", strip=True).lower()
                 href = l['href'].lower()
                 
-                if "расписание" in text and (".xlsx" in href or ".xls" in href):
-                    if not any(word in text for word in black_list) and \
-                       not any(word in href for word in black_list):
-                        full_url = urljoin(self.base_page_url, l['href'])
-                        found_urls.append(full_url)
+                # Ищем файлы Excel, которые помечены как ДФПО или Расписание
+                if (".xlsx" in href or ".xls" in href) and "расписание" in text:
+                    # Проверяем, что это именно дневная форма и нет стоп-слов
+                    if "дфпо" in text or "дфпо" in href:
+                        if not any(word in text for word in black_list) and \
+                           not any(word in href for word in black_list):
+                            full_url = urljoin(self.base_page_url, l['href'])
+                            found_urls.append(full_url)
             
-            return list(set(found_urls))
+            return list(set(found_urls)) # Только уникальные ссылки
         except Exception as e:
             logger.error(f"Ошибка поиска ссылок ХГФ: {e}")
             return []
 
     async def refresh(self):
+        """Основной метод парсинга всех файлов факультета"""
         links = await self._find_all_links()
         if not links:
-            logger.error("❌ Файлы расписания ХГФ не найдены!")
+            logger.error("❌ Ссылки для ХГФ не найдены")
             return None
 
         all_fac_data = {}
@@ -60,41 +64,57 @@ class HGFParser:
         for url in links:
             try:
                 logger.info(f"📥 Обработка файла ХГФ: {url}")
-                response = requests.get(url)
+                response = requests.get(url, timeout=20)
                 wb = openpyxl.load_workbook(BytesIO(response.content), data_only=True)
                 sheet = wb.active
                 
                 subgroups = {}
-                group_row = 14
-                # Сканируем шапку
-                for r_check in [13, 14, 15, 12, 16]:
+                group_row = 15 # Основная строка для групп на ХГФ/ПФ
+                
+                # ШАГ 1: Поиск номеров групп в шапке (строки 14-16)
+                for r_check in [14, 15, 16]:
                     for col in range(4, sheet.max_column + 1):
-                        name = sheet.cell(row=r_check, column=col).value
-                        if name and len(str(name).strip()) > 2:
-                            if not any(x in str(name) for x in ["Дни", "Часы", "№"]):
-                                subgroups[col] = str(name).strip()
+                        val = sheet.cell(row=r_check, column=col).value
+                        if val:
+                            val_str = str(val).strip()
+                            # Отсекаем длинные названия специальностей и служебные слова
+                            if 2 < len(val_str) < 15 and any(c.isdigit() for c in val_str):
+                                # Проверяем строку ниже на наличие номера подгруппы (1 или 2)
+                                sub_val = sheet.cell(row=r_check + 1, column=col).value
+                                if sub_val and str(sub_val).strip() in ["1", "2"]:
+                                    val_str = f"{val_str}_{str(sub_val).strip()}"
+                                
+                                subgroups[col] = val_str
                     if subgroups:
                         group_row = r_check
+                        # Если нашли подгруппы в строке ниже, данные начинаются еще ниже
+                        if "_" in list(subgroups.values())[0]:
+                            group_row += 1
                         break
-                
-                if not subgroups: continue
 
-                for col_idx, sg_name in subgroups.items():
-                    if sg_name not in all_fac_data:
-                        all_fac_data[sg_name] = {}
+                if not subgroups:
+                    continue
+
+                # ШАГ 2: Сбор расписания по найденным колонкам
+                for col_idx, g_name in subgroups.items():
+                    if g_name not in all_fac_data:
+                        all_fac_data[g_name] = {}
                     
                     current_day = "Неизвестно"
                     r = group_row + 1
-                    while r < 400: # ХГФ иногда рисует долго, берем с запасом
+                    
+                    while r < 350:
+                        # Получаем день недели
                         day_val = str(self._get_value(sheet, r, 1) or "").strip()
                         if not day_val:
                             day_val = str(self._get_value(sheet, r, 2) or "").strip()
-                            
+                        
                         if day_val in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
                             current_day = day_val
-                            if current_day not in all_fac_data[sg_name]:
-                                all_fac_data[sg_name][current_day] = []
+                            if current_day not in all_fac_data[g_name]:
+                                all_fac_data[g_name][current_day] = []
 
+                        # Номер пары (колонка 3)
                         pair_num = str(self._get_value(sheet, r, 3) or "").strip()
                         if pair_num.isdigit():
                             subject = self._get_value(sheet, r, col_idx)
@@ -103,20 +123,23 @@ class HGFParser:
                                 teacher = self._get_value(sheet, r + 1, col_idx)
                                 room = self._get_value(sheet, r + 2, col_idx)
                                 
-                                all_fac_data[sg_name][current_day].append({
+                                entry = {
                                     "time": time_raw.replace("(", "").replace(")", "").strip(),
                                     "name": str(subject).strip().replace('\n', ' '),
                                     "teacher": str(teacher).strip() if teacher else "---",
                                     "room": str(room).strip() if room else "---"
-                                })
+                                }
+                                # Добавляем, если такой пары на это время еще нет
+                                if entry not in all_fac_data[g_name][current_day]:
+                                    all_fac_data[g_name][current_day].append(entry)
                             r += 3
                         else:
                             r += 1
             except Exception as e:
-                logger.error(f"⚠️ Ошибка в файле ХГФ {url}: {e}")
+                logger.error(f"⚠️ Ошибка парсинга файла {url}: {e}")
 
         self.cache = all_fac_data
-        logger.info(f"✅ ХГФ обновлен. Всего групп: {len(all_fac_data)}")
+        logger.info(f"✅ ХГФ обновлен. Найдено групп: {len(all_fac_data)}")
         return all_fac_data
 
     def get_groups(self):

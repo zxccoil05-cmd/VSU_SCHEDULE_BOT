@@ -3,8 +3,7 @@ import logging
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -12,33 +11,48 @@ from contextlib import asynccontextmanager
 import dotenv
 import os
 from aiogram.client.session.aiohttp import AiohttpSession
-import aiohttp
 
-# Настраиваем сессию с увеличенными тайм-аутами
-# Это поможет, если сеть на Render подтормаживает
-
-
-# Твоя фабрика
 from factory import ScheduleFactory
 
 dotenv.load_dotenv()
+
 # --- КОНФИГУРАЦИЯ ---
 TOKEN = os.getenv('BOT_TOKEN')
-# URL твоего приложения (для локальных тестов через ngrok укажи его здесь)
 WEBAPP_URL = os.getenv('WEBAPP_URL')
 
 factory = ScheduleFactory()
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
+# --- ФОНОВАЯ ЗАДАЧА ОБНОВЛЕНИЯ ---
+
+async def schedule_refresher():
+    """Фоновый цикл: обновляет данные каждые 6 часов"""
+    # Ждем немного перед первым циклом, чтобы не мешать старту сервера
+    await asyncio.sleep(10) 
+    
+    while True:
+        try:
+            print("🕒 Наступило время планового обновления (раз в 6 часов)...")
+            await factory.update_all()
+            print("✅ Плановое обновление всех факультетов завершено успешно.")
+        except Exception as e:
+            print(f"❌ Ошибка при плановом обновлении: {e}")
+        
+        # Спим 6 часов (6 * 60 * 60 = 21600 секунд)
+        await asyncio.sleep(21600)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # КЛЮЧЕВОЙ МОМЕНТ: 
-    # Используем create_task, чтобы парсинг ушел в фон.
-    # Это позволит lifespan завершиться МГНОВЕННО, 
-    # и сервер uvicorn сразу откроет порт 10000.
+    # 1. Запускаем немедленное обновление при старте
     asyncio.create_task(factory.update_all())
-    print("🚀 Фоновое обновление запущено. Порт открывается...")
+    
+    # 2. Запускаем бесконечный цикл обновления раз в 6 часов
+    asyncio.create_task(schedule_refresher())
+    
+    print("🚀 Фоновое обновление (разовое + циклическое) запущено.")
     yield
+
+# --- ИНИЦИАЛИЗАЦИЯ APP ---
 
 app = FastAPI(lifespan=lifespan)
 
@@ -67,34 +81,19 @@ async def get_sched(group: str):
     if not sched: raise HTTPException(404)
     return {"schedule": sched}
 
-# Если хочешь, чтобы FastAPI отдавал index.html (положи их в папку web)
-# app.mount("/", StaticFiles(directory="web", html=True), name="web")
-
 # --- БОТ ---
 
-session = AiohttpSession(
-    timeout=40, # увеличиваем время ожидания ответа от Telegram
-    proxy=None
-)
-
-# Инициализируем бота с этой сессией
-bot = Bot(
-    token=TOKEN, 
-    session=session
-)
+session = AiohttpSession(timeout=40)
+bot = Bot(token=TOKEN, session=session)
 dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     builder = InlineKeyboardBuilder()
-    
-    # Главная кнопка открытия Web App
     builder.row(types.InlineKeyboardButton(
         text="📅 Открыть расписание", 
         web_app=WebAppInfo(url=WEBAPP_URL)
     ))
-    
-    # Кнопка настроек внутри чата (запасной вариант)
     builder.row(types.InlineKeyboardButton(
         text="⚙️ Настроить в чате", 
         callback_data="setup_chat"
@@ -122,23 +121,20 @@ async def main():
 
     print("🤖 Запуск инфраструктуры...")
 
-    # Создаем задачи по отдельности
     server_task = asyncio.create_task(server.serve())
     
-    # Запуск бота с бесконечным рестартом при ошибках сети
     async def start_bot():
         while True:
             try:
                 print("🔹 Попытка подключения к Telegram...")
                 await dp.start_polling(bot, skip_updates=True)
             except Exception as e:
-                print(f"⚠️ Ошибка бота (таймаут или сеть): {e}")
-                print("🔄 Переподключение через 5 секунд...")
+                print(f"⚠️ Ошибка бота: {e}")
                 await asyncio.sleep(5)
 
     bot_task = asyncio.create_task(start_bot())
 
-    # Ждем только сервер. Если бот упадет — сервер продолжит жить!
+    # Ждем завершения сервера
     await server_task
 
 if __name__ == "__main__":

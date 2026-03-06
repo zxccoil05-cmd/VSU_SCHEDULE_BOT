@@ -1,61 +1,73 @@
 import asyncio
 import logging
-# Импортируем твой класс (предположим, файл называется vsu_parser.py)
-# Если код парсера в этом же файле, удали строку ниже
-from faculties.fmiit import FMIiT_Parser 
 
-# Настройка логов, чтобы видеть процесс поиска ссылки и скачивания
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Выбери, какой парсер тестируем сейчас (просто раскомментируй нужный)
+from bot.faculties.ped import PedParser as TestParser
+# from bot.parsers.fspip_parser import FSPIPParser as TestParser
+# from bot.parsers.gf_parser import GFParser as TestParser
+
+# Настройка логирования, чтобы видеть процесс скачивания
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 async def run_test():
-    # 1. URL страницы с расписанием ФМиИТ
-    target_url = "https://vsu.by/universitet/fakultety/matematiki-i-it/raspisanie.html"
+    print("\n" + "="*60)
+    print(f"🧪 ТЕСТИРОВАНИЕ ПАРСЕРА: {TestParser.__name__}")
+    print("="*60 + "\n")
+
+    parser = TestParser()
+
+    # 1. Проверяем фильтрацию ссылок
+    print("🔎 Шаг 1: Поиск и фильтрация ссылок на Excel...")
+    links = await parser._find_all_links()
     
-    print("🚀 Инициализация парсера...")
-    parser = FMIiT_Parser(target_url)
-
-    print("⏳ Загрузка и обработка файла (это может занять до 30 секунд)...")
-    schedule_data = await parser.get_schedule(force_refresh=True)
-
-    if not schedule_data:
-        print("❌ Ошибка: Расписание не загружено или пустой кэш.")
+    if not links:
+        print("❌ ОШИБКА: Ссылки не найдены! Проверь black_list или base_page_url.")
         return
 
-    # 2. Выводим список всех найденных групп/подгрупп
+    print(f"✅ Найдено подходящих файлов: {len(links)}")
+    for i, link in enumerate(links, 1):
+        print(f"   {i}. {link.split('/')[-1]}")
+
+    # 2. Запускаем парсинг данных
+    print("\n📥 Шаг 2: Скачивание и обработка файлов (это может занять время)...")
+    data = await parser.refresh()
+
+    if not data:
+        print("❌ ОШИБКА: Парсинг завершился с пустым результатом.")
+        return
+
+    # 3. Проверяем список групп
     groups = parser.get_groups()
-    print(f"\n✅ Найдено подгрупп: {len(groups)}")
-    print(f"Список групп: {', '.join(groups[:10])}...") # Показываем первые 10
-
-    # 3. Выбор группы для теста
-    # Можно заменить на input(), если хочешь вводить вручную
-    target_group = groups[0] # Берем самую первую из списка для теста
-    print(f"\n📅 ДЕТАЛЬНОЕ РАСПИСАНИЕ ДЛЯ ГРУППЫ: {target_group}")
-    print("=" * 60)
-
-    group_schedule = schedule_data.get(target_group, {})
-
-    if not group_schedule:
-        print(f"Пустое расписание для группы {target_group}")
-        return
-
-    # Проходим по дням недели
-    days_order = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
+    print(f"\n✅ Шаг 3: Группы успешно извлечены!")
+    print(f"📊 Всего найдено групп: {len(groups)}")
     
-    for day in days_order:
-        lessons = group_schedule.get(day, [])
-        print(f"\n🟡 {day.upper()}:")
+    # Выводим список групп колонками для удобства
+    for i in range(0, len(groups), 4):
+        print(" | ".join(f"{g:<15}" for g in groups[i:i+4]))
+
+    # 4. Проверяем содержимое конкретной группы (берем первую из списка)
+    if groups:
+        target = groups[0]
+        print(f"\n📅 Шаг 4: Проверка расписания для группы '{target}':")
+        schedule = parser.get_schedule(target)
         
-        if not lessons:
-            print("  --- Пары отсутствуют ---")
-            continue
+        if not schedule:
+            print(f"⚠️  Расписание для группы {target} пустое.")
+        else:
+            for day, lessons in schedule.items():
+                print(f"\n📍 {day}:")
+                if not lessons:
+                    print("   (нет занятий)")
+                for p in lessons:
+                    print(f"   [{p['time']}] {p['name']}")
+                    print(f"         🏛 {p['room']} | 👨‍🏫 {p['teacher']}")
 
-        for i, lesson in enumerate(lessons, 1):
-            print(f"  {i}. [{lesson['time']}] {lesson['name']}")
-            print(f"     👨‍🏫 Преподаватель: {lesson['teacher']}")
-            print(f"     📍 Аудитория: {lesson['room']}")
-            print("-" * 30)
-
-    print("\n🏁 ТЕСТ ЗАВЕРШЕН")
+    print("\n" + "="*60)
+    print("🎉 Тест завершен успешно!")
+    print("="*60)
 
 if __name__ == "__main__":
     try:
