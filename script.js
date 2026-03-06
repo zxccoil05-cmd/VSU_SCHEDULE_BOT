@@ -1,15 +1,12 @@
 // В начале script.js
 const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
 
-// Проверка: если мы тестим локально, можно оставить условие
-// const API_BASE = window.location.hostname === 'localhost' 
-//    ? "http://localhost:8000/api" 
-//    : "https://vsu-schedule-bot-code.onrender.com/api";
-
 const facSelect = document.getElementById('fac-select');
 const groupSelect = document.getElementById('group-select');
 const groupArea = document.getElementById('group-area');
 const scheduleRender = document.getElementById('schedule-render');
+// Получаем элементы навигации для управления активным состоянием
+const navItems = document.querySelectorAll('.nav-item');
 
 async function init() {
     await loadFaculties();
@@ -17,19 +14,28 @@ async function init() {
     const savedFac = localStorage.getItem('vsu_fac');
     const savedGroup = localStorage.getItem('vsu_group');
 
-    if (savedFac) {
+    if (savedFac && savedGroup) {
+        // Если всё выбрано — загружаем и прыгаем на экран расписания
         facSelect.value = savedFac;
         await loadGroups(savedFac);
-        if (savedGroup) {
-            groupSelect.value = savedGroup;
-            loadSchedule(savedGroup);
-        }
+        groupSelect.value = savedGroup;
+        loadSchedule(savedGroup);
+        
+        // Переключаем визуально на экран расписания (индекс 1 в навигации)
+        switchScreen('schedule', navItems[1]);
+    } else {
+        // Если данных нет — остаемся на экране настроек (индекс 0)
+        switchScreen('settings', navItems[0]);
     }
 }
 
 function switchScreen(screenId, el) {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    el.classList.add('active');
+    // Убираем активный класс у всех кнопок навигации
+    navItems.forEach(i => i.classList.remove('active'));
+    // Добавляем активный класс нажатой (или выбранной программно) кнопке
+    if (el) el.classList.add('active');
+    
+    // Переключаем видимость секций
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + screenId).classList.add('active');
 }
@@ -48,7 +54,7 @@ async function loadFaculties() {
 facSelect.onchange = async (e) => {
     const fac = e.target.value;
     localStorage.setItem('vsu_fac', fac);
-    localStorage.removeItem('vsu_group');
+    localStorage.removeItem('vsu_group'); // Сбрасываем группу при смене фака
     await loadGroups(fac);
     scheduleRender.innerHTML = "";
 };
@@ -70,7 +76,8 @@ groupSelect.onchange = (e) => {
     const group = e.target.value;
     localStorage.setItem('vsu_group', group);
     loadSchedule(group);
-    switchScreen('schedule', document.querySelectorAll('.nav-item')[1]);
+    // После выбора группы автоматически перекидываем на расписание
+    switchScreen('schedule', navItems[1]);
 };
 
 async function loadSchedule(group) {
@@ -100,7 +107,13 @@ async function loadSchedule(group) {
                 scheduleRender.innerHTML += html;
             }
         });
+        
+        if (scheduleRender.innerHTML.includes('Загрузка...')) {
+            scheduleRender.innerHTML = '<div class="glass-card">📭 На этой неделе занятий не найдено</div>';
+        }
+
     } catch (e) { scheduleRender.innerHTML = '<div class="glass-card">❌ Ошибка сервера</div>'; }
 }
 
+// Запуск инициализации
 init();
