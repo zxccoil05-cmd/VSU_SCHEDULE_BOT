@@ -11,6 +11,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from contextlib import asynccontextmanager
 import dotenv
 import os
+from aiogram.client.session.aiohttp import AiohttpSession
+import aiohttp
+
+# Настраиваем сессию с увеличенными тайм-аутами
+# Это поможет, если сеть на Render подтормаживает
+
 
 # Твоя фабрика
 from factory import ScheduleFactory
@@ -62,7 +68,16 @@ async def get_sched(group: str):
 
 # --- БОТ ---
 
-bot = Bot(token=TOKEN)
+session = AiohttpSession(
+    timeout=40, # увеличиваем время ожидания ответа от Telegram
+    proxy=None
+)
+
+# Инициализируем бота с этой сессией
+bot = Bot(
+    token=TOKEN, 
+    session=session
+)
 dp = Dispatcher()
 
 @dp.message(Command("start"))
@@ -91,12 +106,22 @@ async def cmd_start(message: types.Message):
 # --- ЗАПУСК ---
 
 async def main():
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, loop="asyncio")
+    # Настройка порта для Render
+    port = int(os.environ.get("PORT", 8000))
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=port, loop="asyncio")
     server = uvicorn.Server(config)
     
-    print(f"🚀 API запущен на порту 8000")
-    print(f"🤖 Бот запущен!")
+    print("🚀 Запуск сервера и бота...")
     
+    # Запускаем сервер и бот. 
+    # skip_updates=True поможет не захлебнуться в старых сообщениях при старте
+    try:
+        await asyncio.gather(
+            server.serve(),
+            dp.start_polling(bot, skip_updates=True)
+        )
+    except Exception as e:
+        logging.error(f"Критическая ошибка: {e}")
     await asyncio.gather(server.serve(), dp.start_polling(bot))
 
 if __name__ == "__main__":
