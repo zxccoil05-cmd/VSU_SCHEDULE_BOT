@@ -1,119 +1,171 @@
-// В начале script.js
 const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
+let currentDayIndex = 0;
+let touchStartX = 0;
 
-const facSelect = document.getElementById('fac-select');
-const groupSelect = document.getElementById('group-select');
-const groupArea = document.getElementById('group-area');
-const scheduleRender = document.getElementById('schedule-render');
-// Получаем элементы навигации для управления активным состоянием
+// UI ФУНКЦИИ
+function toggleReportBtn(event) {
+    event.stopPropagation();
+    document.getElementById('report-btn').classList.toggle('show');
+}
+
+function handleGlobalClick(event) {
+    createRipple(event);
+    const btn = document.getElementById('report-btn');
+    // Скрываем кнопку ошибки, если кликнули мимо report-wrapper
+    if (btn.classList.contains('show') && !event.target.closest('.report-wrapper')) {
+        btn.classList.remove('show');
+    }
+}
+
+function sendReport() {
+    // ЗАМЕНИ НА СВОЙ TG (например, https://t.me/durov)
+    const myContact = "https://t.me/@wch8h"; 
+    
+    document.getElementById('report-btn').classList.remove('show');
+    window.open(myContact, '_blank');
+}
+
+function createRipple(event) {
+    const ripple = document.createElement("span");
+    ripple.classList.add("ripple");
+    const size = 50; 
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${event.clientX - size / 2}px`;
+    ripple.style.top = `${event.clientY - size / 2}px`;
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 500);
+}
+
+// РАБОТА С ДАННЫМИ
+const screensContainer = document.getElementById('screens-container');
+const scheduleTrack = document.getElementById('schedule-track');
 const navItems = document.querySelectorAll('.nav-item');
 
 async function init() {
     await loadFaculties();
-    
     const savedFac = localStorage.getItem('vsu_fac');
     const savedGroup = localStorage.getItem('vsu_group');
 
     if (savedFac && savedGroup) {
-        // Если всё выбрано — загружаем и прыгаем на экран расписания
-        facSelect.value = savedFac;
+        document.getElementById('fac-select').value = savedFac;
         await loadGroups(savedFac);
-        groupSelect.value = savedGroup;
+        document.getElementById('group-select').value = savedGroup;
         loadSchedule(savedGroup);
-        
-        // Переключаем визуально на экран расписания (индекс 1 в навигации)
-        switchScreen('schedule', navItems[1]);
     } else {
-        // Если данных нет — остаемся на экране настроек (индекс 0)
-        switchScreen('settings', navItems[0]);
+        switchScreen(0); // Показываем настройки, если данных нет
     }
 }
 
-function switchScreen(screenId, el) {
-    // Убираем активный класс у всех кнопок навигации
+function switchScreen(index) {
     navItems.forEach(i => i.classList.remove('active'));
-    // Добавляем активный класс нажатой (или выбранной программно) кнопке
-    if (el) el.classList.add('active');
-    
-    // Переключаем видимость секций
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + screenId).classList.add('active');
+    navItems[index].classList.add('active');
+    screensContainer.style.transform = `translateX(-${index * 50}%)`;
 }
 
-async function loadFaculties() {
-    try {
-        const r = await fetch(`${API_BASE}/faculties`);
-        const data = await r.json();
-        facSelect.innerHTML = '<option value="" disabled selected>Выберите факультет...</option>';
-        data.faculties.forEach(f => {
-            facSelect.innerHTML += `<option value="${f}">${f}</option>`;
-        });
-    } catch (e) { facSelect.innerHTML = '<option>Ошибка API</option>'; }
+function goToDay(index) {
+    if (index < 0 || index > 5) return;
+    currentDayIndex = index;
+    scheduleTrack.style.transform = `translateX(-${index * 16.666}%)`;
+    // Обновляем табы (используем querySelectorAll внутри days-tabs)
+    document.getElementById('days-tabs').querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === index));
 }
-
-facSelect.onchange = async (e) => {
-    const fac = e.target.value;
-    localStorage.setItem('vsu_fac', fac);
-    localStorage.removeItem('vsu_group'); // Сбрасываем группу при смене фака
-    await loadGroups(fac);
-    scheduleRender.innerHTML = "";
-};
-
-async function loadGroups(fac) {
-    groupArea.style.display = 'block';
-    groupSelect.innerHTML = '<option disabled selected>Загрузка групп...</option>';
-    try {
-        const r = await fetch(`${API_BASE}/faculties/${fac}/groups`);
-        const data = await r.json();
-        groupSelect.innerHTML = '<option value="" disabled selected>Выберите группу...</option>';
-        data.groups.forEach(g => {
-            groupSelect.innerHTML += `<option value="${g}">${g}</option>`;
-        });
-    } catch (e) { console.error(e); }
-}
-
-groupSelect.onchange = (e) => {
-    const group = e.target.value;
-    localStorage.setItem('vsu_group', group);
-    loadSchedule(group);
-    // После выбора группы автоматически перекидываем на расписание
-    switchScreen('schedule', navItems[1]);
-};
 
 async function loadSchedule(group) {
-    scheduleRender.innerHTML = '<div class="glass-card">🔄 Загрузка...</div>';
+    if (!group) return;
+    
+    // Показываем загрузку во всех колонках
+    scheduleTrack.innerHTML = '<div class="day-column"><div class="glass-card">🔄 Загружаем расписание...</div></div>';
+    
     try {
         const r = await fetch(`${API_BASE}/schedule/${encodeURIComponent(group)}`);
+        if (!r.ok) throw new Error('Ошибка сети');
         const data = await r.json();
         
-        scheduleRender.innerHTML = `<h2 style="text-align:center; color:#2980b9;">${group}</h2>`;
         const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-        
-        days.forEach(day => {
-            const lessons = data.schedule[day] || [];
-            if (lessons.length > 0) {
-                let html = `<div class="day-card"><div class="day-title">📅 ${day.toUpperCase()}</div>`;
+        let fullHtml = "";
+
+        days.forEach(dayName => {
+            const lessons = data.schedule[dayName] || [];
+            let html = `<div class="day-column"><div class="day-card"><div class="day-title">📅 ${dayName.toUpperCase()}</div>`;
+            
+            if (lessons.length === 0) {
+                html += `<div style="text-align:center; padding:30px; color:#64748b; font-weight:600;">Пар нет 🎉</div>`;
+            } else {
                 lessons.forEach(l => {
                     html += `
                         <div class="lesson-row">
                             <div class="time-badge">${l.time.replace('(','').replace(')','')}</div>
                             <div class="lesson-data">
-                                <b>${l.name}</b>
-                                <span>👤 ${l.teacher} | 📍 ${l.room}</span>
+                                <b style="font-size:14px; color:#1e3a8a;">${l.name}</b><br>
+                                <span style="font-size:11px; color:#64748b; font-weight:600;">📍 ${l.room} | 👤 ${l.teacher}</span>
                             </div>
                         </div>`;
                 });
-                html += `</div>`;
-                scheduleRender.innerHTML += html;
             }
+            html += `</div></div>`;
+            fullHtml += html;
         });
-        
-        if (scheduleRender.innerHTML.includes('Загрузка...')) {
-            scheduleRender.innerHTML = '<div class="glass-card">📭 На этой неделе занятий не найдено</div>';
-        }
 
-    } catch (e) { scheduleRender.innerHTML = '<div class="glass-card">❌ Ошибка сервера</div>'; }
+        scheduleTrack.innerHTML = fullHtml;
+        
+        // Переключаемся на сегодня (если вс, то пн)
+        let d = new Date().getDay();
+        goToDay((d === 0) ? 0 : d - 1);
+        switchScreen(1); // Прыгаем на экран расписания
+
+    } catch (e) {
+        console.error(e);
+        scheduleTrack.innerHTML = '<div class="day-column"><div class="glass-card">❌ Сервер не отвечает. Попробуй позже.</div></div>';
+    }
 }
 
-// Запуск инициализации
+// API: Факультеты и Группы
+async function loadFaculties() {
+    try {
+        const r = await fetch(`${API_BASE}/faculties`);
+        const data = await r.json();
+        const sel = document.getElementById('fac-select');
+        sel.innerHTML = '<option disabled selected>Выберите факультет...</option>';
+        data.faculties.forEach(f => sel.innerHTML += `<option value="${f}">${f}</option>`);
+    } catch (e) {
+        document.getElementById('fac-select').innerHTML = '<option>Ошибка загрузки</option>';
+    }
+}
+
+async function loadGroups(fac) {
+    document.getElementById('group-area').style.display = 'block';
+    const sel = document.getElementById('group-select');
+    sel.innerHTML = '<option>Загрузка групп...</option>';
+    try {
+        const r = await fetch(`${API_BASE}/faculties/${fac}/groups`);
+        const data = await r.json();
+        sel.innerHTML = '<option disabled selected>Выберите группу...</option>';
+        data.groups.forEach(g => sel.innerHTML += `<option value="${g}">${g}</option>`);
+    } catch (e) {
+        sel.innerHTML = '<option>Ошибка</option>';
+    }
+}
+
+// ОБРАБОТЧИКИ
+document.getElementById('fac-select').onchange = (e) => {
+    localStorage.setItem('vsu_fac', e.target.value);
+    loadGroups(e.target.value);
+};
+
+document.getElementById('group-select').onchange = (e) => {
+    localStorage.setItem('vsu_group', e.target.value);
+    loadSchedule(e.target.value);
+};
+
+// СВАЙПЫ
+const swiperArea = document.getElementById('schedule-swiper');
+swiperArea.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, {passive: true});
+swiperArea.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 60) {
+        if (diff > 0) goToDay(currentDayIndex + 1);
+        else goToDay(currentDayIndex - 1);
+    }
+});
+
 init();
