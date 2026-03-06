@@ -1,69 +1,106 @@
-const tg = window.Telegram.WebApp;
-tg.expand(); // Разворачиваем на весь экран
+// В начале script.js
+const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
 
-// 1. Получаем настройки из URL (которые передал бот)
-const urlParams = new URLSearchParams(window.location.search);
-const faculty = urlParams.get('faculty') || 'ФМиИТ';
-const group = urlParams.get('group');
+// Проверка: если мы тестим локально, можно оставить условие
+// const API_BASE = window.location.hostname === 'localhost' 
+//    ? "http://localhost:8000/api" 
+//    : "https://vsu-schedule-bot-code.onrender.com/api";
 
-document.getElementById('group-name').innerText = group || "Группа не выбрана";
-document.getElementById('faculty-name').innerText = faculty;
+const facSelect = document.getElementById('fac-select');
+const groupSelect = document.getElementById('group-select');
+const groupArea = document.getElementById('group-area');
+const scheduleRender = document.getElementById('schedule-render');
 
-// 2. Функция загрузки данных
-async function loadSchedule() {
+async function init() {
+    await loadFaculties();
+    
+    const savedFac = localStorage.getItem('vsu_fac');
+    const savedGroup = localStorage.getItem('vsu_group');
+
+    if (savedFac) {
+        facSelect.value = savedFac;
+        await loadGroups(savedFac);
+        if (savedGroup) {
+            groupSelect.value = savedGroup;
+            loadSchedule(savedGroup);
+        }
+    }
+}
+
+function switchScreen(screenId, el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screenId).classList.add('active');
+}
+
+async function loadFaculties() {
     try {
-        // Укажи здесь URL своего сервера, где запущен бот
-        const API_URL = `https://vsu-schedule-bot-code.onrender.com/api/schedule?faculty=${encodeURIComponent(faculty)}`;
-        
-        const response = await fetch(API_URL);
-        const allData = await response.json();
-        
-        const groupSchedule = allData[group];
-        renderSchedule(groupSchedule);
-    } catch (error) {
-        console.error("Ошибка загрузки:", error);
-        document.getElementById('schedule-container').innerHTML = "<p>Ошибка загрузки расписания...</p>";
-    }
-}
-
-// 3. Функция отрисовки
-function renderSchedule(schedule) {
-    const container = document.getElementById('schedule-container');
-    container.innerHTML = ''; // Очищаем
-
-    if (!schedule) {
-        container.innerHTML = "<p>Расписание для этой группы не найдено.</p>";
-        return;
-    }
-
-    const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-
-    days.forEach(day => {
-        const lessons = schedule[day];
-        if (!lessons || lessons.length === 0) return;
-
-        // Создаем блок дня
-        const daySection = document.createElement('div');
-        daySection.className = 'day-section';
-        daySection.innerHTML = `<h2>${day}</h2>`;
-
-        const lessonsList = document.createElement('div');
-        lessonsList.className = 'lessons-list';
-
-        lessons.forEach(lesson => {
-            // ТЕПЕРЬ МЫ ИСПОЛЬЗУЕМ lesson.time и lesson.name
-            const lessonItem = document.createElement('div');
-            lessonItem.className = 'lesson-item';
-            lessonItem.innerHTML = `
-                <div class="time">${lesson.time || '--:--'}</div>
-                <div class="details">${lesson.name}</div>
-            `;
-            lessonsList.appendChild(lessonItem);
+        const r = await fetch(`${API_BASE}/faculties`);
+        const data = await r.json();
+        facSelect.innerHTML = '<option value="" disabled selected>Выберите факультет...</option>';
+        data.faculties.forEach(f => {
+            facSelect.innerHTML += `<option value="${f}">${f}</option>`;
         });
-
-        daySection.appendChild(lessonsList);
-        container.appendChild(daySection);
-    });
+    } catch (e) { facSelect.innerHTML = '<option>Ошибка API</option>'; }
 }
 
-loadSchedule();
+facSelect.onchange = async (e) => {
+    const fac = e.target.value;
+    localStorage.setItem('vsu_fac', fac);
+    localStorage.removeItem('vsu_group');
+    await loadGroups(fac);
+    scheduleRender.innerHTML = "";
+};
+
+async function loadGroups(fac) {
+    groupArea.style.display = 'block';
+    groupSelect.innerHTML = '<option disabled selected>Загрузка групп...</option>';
+    try {
+        const r = await fetch(`${API_BASE}/faculties/${fac}/groups`);
+        const data = await r.json();
+        groupSelect.innerHTML = '<option value="" disabled selected>Выберите группу...</option>';
+        data.groups.forEach(g => {
+            groupSelect.innerHTML += `<option value="${g}">${g}</option>`;
+        });
+    } catch (e) { console.error(e); }
+}
+
+groupSelect.onchange = (e) => {
+    const group = e.target.value;
+    localStorage.setItem('vsu_group', group);
+    loadSchedule(group);
+    switchScreen('schedule', document.querySelectorAll('.nav-item')[1]);
+};
+
+async function loadSchedule(group) {
+    scheduleRender.innerHTML = '<div class="glass-card">🔄 Загрузка...</div>';
+    try {
+        const r = await fetch(`${API_BASE}/schedule/${encodeURIComponent(group)}`);
+        const data = await r.json();
+        
+        scheduleRender.innerHTML = `<h2 style="text-align:center; color:#2980b9;">${group}</h2>`;
+        const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        
+        days.forEach(day => {
+            const lessons = data.schedule[day] || [];
+            if (lessons.length > 0) {
+                let html = `<div class="day-card"><div class="day-title">📅 ${day.toUpperCase()}</div>`;
+                lessons.forEach(l => {
+                    html += `
+                        <div class="lesson-row">
+                            <div class="time-badge">${l.time.replace('(','').replace(')','')}</div>
+                            <div class="lesson-data">
+                                <b>${l.name}</b>
+                                <span>👤 ${l.teacher} | 📍 ${l.room}</span>
+                            </div>
+                        </div>`;
+                });
+                html += `</div>`;
+                scheduleRender.innerHTML += html;
+            }
+        });
+    } catch (e) { scheduleRender.innerHTML = '<div class="glass-card">❌ Ошибка сервера</div>'; }
+}
+
+init();

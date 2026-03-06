@@ -5,3 +5,5 @@ beautifulsoup4
 aiohttp
 aiohttp-cors
 python-dotenv
+fastapi
+uvicorn
