@@ -110,9 +110,7 @@ async def cmd_start(message: types.Message):
 # --- ЗАПУСК ---
 
 async def main():
-    # Render использует порт 10000 или берет из PORT
     port = int(os.environ.get("PORT", 10000))
-    
     config = uvicorn.Config(
         app, 
         host="0.0.0.0", 
@@ -122,16 +120,26 @@ async def main():
     )
     server = uvicorn.Server(config)
 
-    print("🤖 Запуск сервера и бота...")
+    print("🤖 Запуск инфраструктуры...")
+
+    # Создаем задачи по отдельности
+    server_task = asyncio.create_task(server.serve())
     
-    # Запускаем только ОДИН раз через gather
-    try:
-        await asyncio.gather(
-            server.serve(),
-            dp.start_polling(bot, skip_updates=True)
-        )
-    except Exception as e:
-        logging.error(f"Критическая ошибка: {e}")
+    # Запуск бота с бесконечным рестартом при ошибках сети
+    async def start_bot():
+        while True:
+            try:
+                print("🔹 Попытка подключения к Telegram...")
+                await dp.start_polling(bot, skip_updates=True)
+            except Exception as e:
+                print(f"⚠️ Ошибка бота (таймаут или сеть): {e}")
+                print("🔄 Переподключение через 5 секунд...")
+                await asyncio.sleep(5)
+
+    bot_task = asyncio.create_task(start_bot())
+
+    # Ждем только сервер. Если бот упадет — сервер продолжит жить!
+    await server_task
 
 if __name__ == "__main__":
     asyncio.run(main())
