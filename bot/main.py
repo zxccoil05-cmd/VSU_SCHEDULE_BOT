@@ -27,25 +27,27 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 async def schedule_refresher():
     """Фоновый цикл: обновляет данные каждые 6 часов"""
-    await asyncio.sleep(10) 
     while True:
         try:
-            print("🕒 Наступило время планового обновления (раз в 6 часов)...")
+            print("🕒 Наступило время обновления данных...")
             await factory.update_all()
-            print("✅ Плановое обновление всех факультетов завершено успешно.")
+            print("✅ Обновление завершено успешно.")
         except Exception as e:
-            print(f"❌ Ошибка при плановом обновлении: {e}")
+            print(f"❌ Ошибка при обновлении: {e}")
         
+        # Спим 6 часов ПОСЛЕ успешного или ошибочного обновления
         await asyncio.sleep(21600)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Запускаем немедленное обновление при старте
-    asyncio.create_task(factory.update_all())
-    # Запускаем бесконечный цикл обновления
-    asyncio.create_task(schedule_refresher())
-    print("🚀 Фоновое обновление запущено.")
+    # Запускаем один единственный цикл, который сделает первое обновление СРАЗУ
+    refresher_task = asyncio.create_task(schedule_refresher())
+    print("🚀 Фоновый сервис обновлений запущен.")
+    
     yield
+    
+    # При выключении сервера отменяем задачу (хороший тон)
+    refresher_task.cancel()
 
 # --- ИНИЦИАЛИЗАЦИЯ APP ---
 
