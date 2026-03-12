@@ -26,9 +26,9 @@
     }
 
     [data-theme="dark"] { 
-        --bg: #0f172a; --primary: #3b82f6; --primary-solid: #3b82f6; --primary-grad: linear-gradient(135deg, #3b82f6, #60a5fa);
-        --text: #f1f5f9; --card-bg: #1e293b; --blob1: #1e40af; --blob2: #312e81; 
-        --glass: rgba(30, 41, 59, 0.7); --glass-thick: #0f172a; --border: rgba(51, 65, 85, 0.8); 
+        --bg: #343434; --primary: #969696; --primary-solid: #9c9c9c; --primary-grad: linear-gradient(135deg, #6a6a6a, #7c7c7c);
+        --text: #f1f5f9; --card-bg: #3e3e3e; --blob1: #282828; --blob2: #363636; 
+        --glass: rgba(48, 48, 48, 0.7); --glass-thick: #141414; --border: rgba(88, 88, 88, 0.8); 
     }
     [data-theme="red"] { 
         --bg: #450a0a; --primary: #ef4444; --primary-solid: #ef4444; --primary-grad: linear-gradient(135deg, #ef4444, #f87171);
@@ -44,6 +44,18 @@
         --bg: #fdf2f8; --primary: #db2777; --primary-solid: #db2777; --primary-grad: linear-gradient(135deg, #db2777, #f472b6);
         --text: #831843; --card-bg: #ffffff; --blob1: #f472b6; --blob2: #fbcfe8; 
         --border: #f9a8d4; --glass: rgba(251, 207, 232, 0.6); --glass-thick: #fdf2f8; 
+    }
+    [data-theme="dark-pink"] { 
+        --bg: #1a0f1a;
+        --primary: #ff69b4;
+        --primary-solid: #ff69b4;
+        --primary-grad: linear-gradient(135deg, #ff69b4, #ff1493);
+        --text: #ffe4f2;
+        --card-bg: #2a1a2a;
+        --blob1: #ff1493;
+        --blob2: #ff69b4;
+        --glass: rgba(42, 26, 42, 0.7);
+        --border: #ff69b4;
     }
     [data-theme="gray"] { 
         --bg: #1f2937; --primary: #9ca3af; --primary-solid: #9ca3af; --primary-grad: linear-gradient(135deg, #9ca3af, #d1d5db);
@@ -62,173 +74,545 @@
     }
 
     /* 2. БАЗОВЫЕ СТИЛИ */
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    * { 
+        box-sizing: border-box; 
+        -webkit-tap-highlight-color: transparent; 
+        outline: none;
+    }
 
     body {
         font-family: 'LINE Seed JP', sans-serif;
-        margin: 0; padding: 0;
-        background: var(--bg); color: var(--text);
-        height: calc(var(--vh, 1vh) * 100);
-        width: 100vw; overflow: hidden;
-        position: fixed;
+        font-weight: 700;
+        margin: 0; 
+        padding: 0;
+        background: var(--bg); 
+        color: var(--text);
+        height: 100vh;
+        width: 100vw; 
+        overflow: hidden;
         transition: background 0.4s ease, color 0.4s ease;
     }
 
     /* ФОНОВЫЕ ПЯТНА */
-    .bg-wrapper { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--bg); }
-    .bg-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; transition: background 0.8s ease; }
-    .blob-1 { width: 400px; height: 400px; background: var(--blob1); top: -100px; left: -100px; }
-    .blob-2 { width: 300px; height: 300px; background: var(--blob2); bottom: -50px; right: -50px; }
+    .background-blobs { 
+        position: fixed; 
+        inset: 0; 
+        z-index: -1; 
+        overflow: hidden; 
+        isolation: isolate;
+        background: var(--bg); 
+    }
+    .blob { 
+        position: absolute; 
+        border-radius: 50%; 
+        filter: blur(60px); 
+        opacity: 0.4; 
+        transition: background 0.8s ease; 
+    }
+    .blob-1 { 
+        width: 400px; 
+        height: 400px; 
+        background: var(--blob1); 
+        top: -100px; 
+        left: -100px; 
+    }
+    .blob-2 { 
+        width: 300px; 
+        height: 300px; 
+        background: var(--blob2); 
+        bottom: -50px; 
+        right: -50px; 
+    }
 
-    .app-viewport { width: 100%; height: 100%; display: flex; flex-direction: column; }
-    .screens-container { display: flex; width: 300%; height: 100%; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-    .screen { width: 33.3333%; height: 100%; display: flex; flex-direction: column; padding: 0 20px; padding-top: env(safe-area-inset-top); position: relative; }
+    .app-viewport { 
+        width: 100%; 
+        height: 100%; 
+        display: flex; 
+        flex-direction: column; 
+        overflow: hidden;
+    }
 
-    .content-scroll { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+    .theme-header {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        gap: 20px;
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border); 
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-radius: 20px;
+    }
+
+    .back-btn {
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: var(--text);
+        cursor: pointer;
+        padding: 0 10px;
+    }
+
+    .theme-option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .theme-option:last-child {
+        border-bottom: none;
+    }
+
+    .check {
+        color: var(--primary);
+        font-weight: 900;
+        font-size: 20px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .theme-option.active-theme .check {
+        opacity: 1;
+    }
 
     /* ЛОГОТИП */
-    h1.logo {
-        display: flex; align-items: center; justify-content: center; gap: 15px; margin: 30px 0;
-        font-size: 28px; font-weight: 900; letter-spacing: -0.5px;
-        background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+    .header {
+        padding: 20px 0;
+        width: 100%;
     }
-    .logo-icon { display: inline-block; font-size: 32px; -webkit-text-fill-color: initial; animation: float 3s ease-in-out infinite; }
 
-    @keyframes float {
-        0%, 100% { transform: translateY(0px) rotate(0deg); }
-        50% { transform: translateY(-6px) rotate(5deg); }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .logo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .logo-img {
+        width: 47px;
+        height: 47px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .logo-text {
+        font-size: 28px;
+        font-weight: 700;
+        background: var(--primary-grad);
+        background-clip: text;
+        color: transparent;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* КОНТЕЙНЕР ЭКРАНОВ */
+    .screens-container { 
+        display: flex; 
+        width: 400%; 
+        height: 100%;
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+        margin-top: 0;
+    }
+
+    .screen { 
+        width: 25%; 
+        height: 100%; 
+        overflow-y: auto; 
+        padding: 0 20px; 
+        -webkit-overflow-scrolling: touch;
     }
 
     /* КАРТОЧКИ И ПОЛЯ */
     .glass-card {
-        background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--border); border-radius: 24px;
-        padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        background: var(--glass); 
+        backdrop-filter: blur(20px); 
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--border); 
+        border-radius: 24px;
+        padding: 20px; 
+        margin-bottom: 15px; 
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        animation: fadeInUp 0.3s ease forwards;
+    }
+
+    .select-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .field-label {
+        font-weight: 700;
+        color: var(--primary-grad);
     }
 
     select, .search-input {
-        width: 100%; padding: 16px; border-radius: 16px; border: 1px solid var(--border); 
-        background: var(--card-bg); color: var(--text); font-weight: 700; font-family: inherit; font-size: 16px;
-        margin-top: 10px; appearance: none;
+        width: 100%; 
+        padding: 16px; 
+        border-radius: 16px; 
+        border: 1px solid var(--border); 
+        background: var(--card-bg); 
+        color: var(--text); 
+        font-weight: 700; 
+        font-family: inherit; 
+        font-size: 16px;
+        margin-top: 10px; 
+        appearance: none;
     }
 
     .action-btn {
-        width: 100%; margin-top: 12px; padding: 16px; border-radius: 16px;
-        background: var(--primary-grad); color: white; border: none; font-weight: 800;
-        font-size: 14px; cursor: pointer; transition: 0.2s; font-family: inherit;
+        width: 100%; 
+        margin-top: 12px; 
+        padding: 16px; 
+        border-radius: 16px;
+        background: var(--primary-grad); 
+        color: white; 
+        border: none; 
+        font-weight: 800;
+        font-size: 14px; 
+        cursor: pointer; 
+        transition: 0.2s; 
+        font-family: inherit;
     }
-    .btn-danger { background: #ef4444 !important; }
+    .btn-danger { 
+        background: #ef4444 !important; 
+    }
+
+    .double-button-field {
+        display: flex;
+        width: 100%;
+        gap: 15px;
+    }
+
+    .contact-button {
+        flex: 1;
+    }
 
     /* ШАПКА РАСПИСАНИЯ */
     .days-tabs { 
-        display: flex; gap: 6px; position: sticky; top: 0; z-index: 100;
-        padding: 10px; margin: 10px 0;
-        background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-        border-radius: 20px; border: 1px solid var(--border);
+        display: flex; 
+        gap: 6px; 
+        position: sticky; 
+        top: 0; 
+        z-index: 100;
+        padding: 10px; 
+        margin: 10px 0;
+        background: var(--glass); 
+        backdrop-filter: blur(15px); 
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 20px; 
+        border: 1px solid var(--border);
+        height: 60px;
     }
     .day-tab {
-        flex: 1; text-align: center; padding: 10px 0; border-radius: 12px;
-        background: transparent; border: none; color: var(--text); opacity: 0.6;
-        font-size: 11px; font-weight: 800; transition: all 0.3s ease;
+        flex: 1; 
+        text-align: center; 
+        padding: 10px 0; 
+        border-radius: 12px;
+        background: transparent; 
+        border: none; 
+        color: var(--text); 
+        opacity: 0.6;
+        font-size: 11px; 
+        font-weight: 800; 
+        transition: all 0.3s ease;
     }
     .day-tab.active { 
-        background: var(--primary-grad); color: white; opacity: 1;
+        background: var(--primary-grad); 
+        color: white; 
+        opacity: 1;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     /* РАСПИСАНИЕ (SWIPER) */
-    #schedule-swiper { flex: 1; overflow: hidden; width: 100%; margin-top: 0; }
-    .swiper-track { display: flex; width: 600%; height: 100%; transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
-    .day-column { width: 16.666%; height: 100%; padding: 10px 5px 120px 5px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    .day-column::-webkit-scrollbar { width: 0; }
+    #schedule-swiper { 
+        flex: 1; 
+        overflow: hidden; 
+        width: 100%; 
+        margin-top: 0; 
+        padding-bottom: 100px;
+    }
+    .swiper-track { 
+        display: flex; 
+        width: 600%; 
+        transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1); 
+    }
+    .day-column { 
+        width: 16.666%; 
+        height: auto; 
+        min-height: 100%;
+        padding: 10px 5px 0px 5px; 
+        -webkit-overflow-scrolling: touch; 
+        scroll-behavior: smooth;
+    }
+    .day-column::-webkit-scrollbar { 
+        width: 0; 
+    }
 
     /* ПАРЫ */
-    .lesson-row { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--border); }
-    .lesson-row:last-child { border-bottom: none; }
+    .lesson-row { 
+        display: flex; 
+        gap: 16px; 
+        padding: 18px 0; 
+        border-bottom: 1px solid var(--border); 
+        transition: background 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
+        opacity: 1;
+    }
+    .lesson-row:last-child { 
+        border-bottom: none; 
+    }
 
-    .time-block { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
-    .time-start { font-size: 11px; color: var(--text); opacity: 0.5; font-weight: 700; }
-    .time-end { font-size: 19px; font-weight: 900; background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .time-block { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+        min-width: 60px; 
+    }
+    .time-start { 
+        font-size: 19px; 
+        background: var(--primary-grad); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent;  
+        font-weight: 900; 
+    }
+    .time-end { 
+        font-size: 11px; 
+        font-weight: 700; 
+        color: var(--text); 
+        opacity: 0.5;
+    }
 
     .lesson-type { 
-        font-size: 10px; font-weight: 900; text-transform: uppercase; 
-        letter-spacing: 0.8px; padding: 4px 10px; border-radius: 8px;
-        display: inline-block; margin-bottom: 8px;
-        background: var(--card-bg); color: var(--primary-solid);
+        font-size: 10px; 
+        font-weight: 900; 
+        text-transform: uppercase; 
+        letter-spacing: 0.8px; 
+        padding: 4px 10px; 
+        border-radius: 8px;
+        display: inline-block; 
+        margin-bottom: 8px;
+        background: var(--card-bg); 
+        color: var(--primary-grad);
         border: 1px solid var(--primary-solid);
     }
-    .lesson-name { font-weight: 800; font-size: 15px; color: var(--text); margin-bottom: 4px; display: block; }
-    .meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text); opacity: 0.7; font-weight: 600; }
+    .lesson-name { 
+        font-weight: 800; 
+        font-size: 15px; 
+        color: var(--text); 
+        margin-bottom: 4px; 
+        display: block; 
+    }
 
     /* НИЖНЯЯ НАВИГАЦИЯ */
+/* НИЖНЯЯ НАВИГАЦИЯ */
     .bottom-nav {
-        position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; 
-        transform: translateX(-50%); width: 90%; max-width: 400px; 
-        background: var(--card-bg); height: 75px; border-radius: 24px; 
-        display: flex; justify-content: space-around; align-items: center; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1000;
-        border: 1px solid var(--border);
+        position: fixed; 
+        bottom: 20px; 
+        left: 20px;
+        right: 20px;
+        width: auto;
+        height: 75px;
+        background: var(--primary-grad);
+        border: 1px solid var(--primary-solid);
+        display: flex;
+        justify-content: space-around;
+        border-radius: 24px;
+        z-index: 1000;
+        align-items: center;
+        gap: 0; /* убираем gap, используем padding */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        transition: background 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
+        opacity: 1;
+        transform: translateY(0);
+        padding: 0 10px;
     }
-    .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text); opacity: 0.4; transition: 0.3s; flex: 1; }
-    .nav-item.active { opacity: 1; color: var(--primary-solid); }
 
-    .nav-item .icon-box {
-        width: 55px; height: 32px; display: flex; align-items: center; justify-content: center; 
-        border-radius: 16px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-bottom: 2px;
+    .bottom-nav.hidden {
+        opacity: 0;
+        transform: translateY(20px);
+        pointer-events: none;
     }
-    .nav-item.active .icon-box { background: var(--primary-grad); }
-    .nav-item.active .icon-box span { font-size: 15px; color: white; animation: navFloat 2.5s ease-in-out infinite; }
-    .nav-item span:last-child { font-size: 10px; font-weight: 800; text-transform: uppercase; margin-top: 2px; }
 
-    @keyframes navFloat {
-        0%, 100% { transform: scale(1.15) translateY(0px); }
-        50% { transform: scale(1.15) translateY(-3px); }
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+        flex: 1;
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
     }
-</style>
+
+    /* Разделители */
+    .nav-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 5%;
+        height: 90%;
+        width: 1px;
+        background: rgba(255, 255, 255, 0.3);
+        transform: none !important;
+        transition: none !important;
+        pointer-events: none;
+    }
+
+    /* Активный пункт - меняем только цвет и размер текста/иконки */
+    .nav-item.active {
+        color: white;
+    }
+
+    .nav-item.active span:first-child {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-item.active span:last-child {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-item span:first-child {
+        font-size: 20px;
+        transition: transform 0.3s ease;
+    }
+
+    .nav-item span:last-child {
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 2px;
+        transition: transform 0.3s ease;
+    }
+
+    /* СКРОЛЛ КОНТЕНТА */
+    .content-scroll { 
+        flex: 1; 
+        overflow-y: auto; 
+        padding-bottom: 100px; 
+    }
+
+    /* Анимация появления */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .teacher-result {
+        animation: fadeInUp 0.3s ease forwards;
+    }
+    </style>
 </head>
 <body>
-    <div class="bg-wrapper">
-        <div class="blob-1 bg-blob"></div>
-        <div class="blob-2 bg-blob"></div>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
     </div>
 
     <div class="app-viewport">
         <div class="screens-container" id="screens-container">
-            <section class="screen">
+            <!-- Экран выбора темы (индекс 0) -->
+            <div class="screen" id="theme-screen">
+                <div class="theme-header">
+                    <button class="back-btn" onclick="switchScreen(1)">←</button>
+                    <h2>Выберите тему</h2>
+                </div>
                 <div class="content-scroll">
-                    <h1 class="logo">
-                        <span class="logo-icon">📚</span>
-                        <span>ВГУ Mobile</span>
-                    </h1>
                     <div class="glass-card">
-                        <label class="field-label">ФАКУЛЬТЕТ</label>
-                        <select id="fac-select"><option>Загрузка...</option></select>
-                        
-                        <div id="group-area" style="display:none; margin-top: 20px;">
-                            <label class="field-label">ГРУППА</label>
-                            <select id="group-select"></select>
-                            <div class="glass-card">
-                            <label style="font-weight:700; font-size: 13px; opacity: 0.6;">🎨 ОФОРМЛЕНИЕ</label>
-                            <select id="theme-select" onchange="setTheme(this.value)">
-                                <option value="light">Стандартная</option>
-                                <option value="dark">Темная ночь</option>
-                                <option value="forest">Зеленый лес</option>
-                                <option value="red">Рубиновая</option>
-                                <option value="neon">Неоновый кибер</option>
-                                <option value="pink">Розовая сакура</option>
-                                <option value="gray">Стальной серый</option>
-                                <option value="yellow">Янтарная</option>
-                            </select>
-                            </div>
-                            <button class="action-btn" onclick="window.open('https://t.me/vsu_mobile', '_blank')">📢Канал по улучшению</button>
-                            <button class="action-btn btn-danger" onclick="window.open('https://t.me/wch8h', '_blank')">⚠️Нашли ошибку?</button>
+                        <div class="theme-option" onclick="setTheme('light')">
+                            <span>☀️ Светлая</span>
+                            <span class="check" id="check-light">✓</span>
+                        </div>
+                        <div class="theme-option" onclick="setTheme('dark')">
+                            <span>🌙 Темная</span>
+                            <span class="check" id="check-dark">✓</span>
+                        </div>
+                        <div class="theme-option" onclick="setTheme('forest')">
+                            <span>🌲 Лесная</span>
+                            <span class="check" id="check-forest">✓</span>
+                        </div>
+                        <div class="theme-option" onclick="setTheme('red')">
+                            <span>🔥 Рубиновая</span>
+                            <span class="check" id="check-red">✓</span>
+                        </div>
+                        <div class="theme-option" onclick="setTheme('neon')">
+                            <span>💚 Неоновая</span>
+                            <span class="check" id="check-neon">✓</span>
+                        </div>
+                        <div class="theme-option" onclick="setTheme('pink')">
+                            <span>🌸 Розовая</span>
+                            <span class="check" id="check-pink">✓</span>
+                        </div>
+                        <div class="theme-option" onclick="setTheme('dark-pink')">
+                            <span>🌸 Розовая (Темная)</span>
+                            <span class="check" id="check-dark-pink">✓</span>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <section class="screen">
+            <!-- Главный экран (индекс 1) -->
+            <div class="screen" id="main-screen">
+                <header class="header">
+                    <div class="container">
+                        <div class="logo">
+                            <img src="img/logo.png" class="logo-img" alt="logo">
+                            <span class="logo-text">ВГУ Mobile</span>
+                        </div>
+                    </div>
+                </header>
+                <div class="content-scroll">
+                    <div class="glass-card">
+                        <div class="select-bar">
+                            <label class="field-label">ФАКУЛЬТЕТ</label>
+                            <select id="fac-select"><option>Загрузка...</option></select>
+                        </div>
+                        
+                        <div id="group-area" style="display:none;">
+                            <div class="select-bar">
+                                <label class="field-label">ГРУППА</label>
+                                <select id="group-select"></select>
+                            </div>
+                            
+                            <button class="action-btn" onclick="openThemeScreen()">🎨 Настроить тему</button>
+                            
+                            <button class="action-btn" onclick="window.open('https://t.me/vsu_mobile', '_blank')">📢 Канал по улучшению</button>
+                            <button class="action-btn btn-danger" onclick="window.open('https://t.me/wch8h', '_blank')">⚠️ Нашли ошибку?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Экран расписания (индекс 2) -->
+            <div class="screen" id="schedule-screen">
                 <div class="days-tabs" id="days-tabs">
                     <div class="day-tab" onclick="goToDay(0)">ПН</div>
                     <div class="day-tab" onclick="goToDay(1)">ВТ</div>
@@ -240,261 +624,324 @@
                 <div id="schedule-swiper">
                     <div class="swiper-track" id="schedule-track"></div>
                 </div>
-            </section>
+            </div>
 
-            <section class="screen">
+            <!-- Экран поиска (индекс 3) -->
+            <div class="screen" id="search-screen">
                 <div class="content-scroll">
-                    <h1 class="logo">Поиск</h1>
+                    <h1 class="logo" style="margin: 20px 0;">Поиск</h1>
                     <div class="glass-card">
                         <input type="text" id="teacher-input" class="search-input" placeholder="Фамилия преподавателя...">
                         <button class="action-btn" onclick="searchTeacher()">🔍 Найти</button>
                     </div>
                     <div id="teacher-results"></div>
                 </div>
-            </section>
+            </div>
         </div>
     </div>
 
-    <div class="bottom-nav">
-    <div class="nav-item active" onclick="switchScreen(0)">
-        <div class="icon-box"><span>⚙️</span></div>
-        <span>ОПЦИИ</span>
-    </div>
-    <div class="nav-item" onclick="switchScreen(1)">
-        <div class="icon-box"><span>📅</span></div>
-        <span>ПАРЫ</span>
-    </div>
-    <div class="nav-item" onclick="switchScreen(2)">
-        <div class="icon-box"><span>🔍</span></div>
-        <span>ПОИСК</span>
-    </div>
-</div>
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="switchScreen(1)">
+            <span>🏠</span>
+            <span>Главная</span>
+        </div>
+        <div class="nav-item active" onclick="switchScreen(2)">
+            <span>📅</span>
+            <span>Расписание</span>
+        </div>
+        <div class="nav-item" onclick="switchScreen(3)">
+            <span>🔍</span>
+            <span>Поиск</span>
+        </div>
+    </nav>
 
-<script>
-    const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
-    let currentDayIndex = 0; 
-    let touchStartX = 0; 
-    let teacherCache = {};
+    <script>
+        const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
+        let currentDayIndex = 0; 
+        let touchStartX = 0; 
+        let teacherCache = {};
 
-    const typeMap = {
-        'Лек': 'Лекция',
-        'Лаб': 'Лабораторная работа',
-        'ПЗ': 'Практическое занятие',
-        'Пр': 'Практическое занятие',
-        'Сем': 'Семинар',
-        'Экз': 'Экзамен',
-        'Зач': 'Зачет',
-        'Куср':'Курсовая'
-    };
+        const typeMap = {
+            'Лек': 'Лекция',
+            'Лаб': 'Лабораторная работа',
+            'ПЗ': 'Практическое занятие',
+            'Пр': 'Практическое занятие',
+            'Сем': 'Семинар',
+            'Экз': 'Экзамен',
+            'Зач': 'Зачет',
+            'Куср': 'КУСР'
+        };
 
-    function fixFullHeight() {
-        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-    }
+        const screenToNavIndex = {
+            0: null,
+            1: 0,
+            2: 1,
+            3: 2
+        };
 
-    function switchScreen(idx) {
-        document.getElementById('screens-container').style.transform = `translateX(-${idx * 33.3333}%)`;
-        document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === idx));
-    }
-
-    // --- ОБНОВЛЕННОЕ СОХРАНЕНИЕ ДНЯ ---
-    function goToDay(idx) {
-        if (idx < 0 || idx > 5) return;
-        currentDayIndex = idx;
-        
-        // Сохраняем индекс в память
-        localStorage.setItem('vsu_last_day', idx);
-        
-        const track = document.getElementById('schedule-track');
-        if (track) track.style.transform = `translateX(-${idx * 16.666}%)`;
-        document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
-    }
-
-    function setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('vsu_theme', theme);
-        const themeSelect = document.getElementById('theme-select');
-        if (themeSelect) themeSelect.value = theme;
-
-        const style = getComputedStyle(document.documentElement);
-        const b1 = document.querySelector('.blob-1');
-        const b2 = document.querySelector('.blob-2');
-        if(b1) b1.style.background = style.getPropertyValue('--blob1');
-        if(b2) b2.style.background = style.getPropertyValue('--blob2');
-    }
-
-    function renderLessonRow(l, mode = 'group') {
-        const timeClean = (l.time || '').replace(/[()]/g, '');
-        const timeParts = timeClean.split('-');
-        const tStart = timeParts[0] || '';
-        const tEnd = timeParts[1] || '';
-
-        let fullName = l.name || '';
-        let typeDisplay = '';
-        
-        const typeMatch = fullName.match(/\((Лек|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
-        if (typeMatch) {
-            typeDisplay = typeMap[typeMatch[1]] || typeMatch[1];
-            fullName = fullName.replace(typeMatch[0], '').trim();
+        function switchScreen(idx) {
+            const nav = document.querySelector('.bottom-nav');
+            if (idx === 0) {
+                nav.classList.add('hidden');
+            } else {
+                nav.classList.remove('hidden');
+            }
+            
+            document.getElementById('screens-container').style.transform = `translateX(-${idx * 25}%)`;
+            
+            document.querySelectorAll('.nav-item').forEach((n, i) => {
+                n.classList.toggle('active', i === screenToNavIndex[idx]);
+            });
+            
+            // Перезапускаем анимацию для всех карточек на новом экране
+            const currentScreen = document.querySelectorAll('.screen')[idx];
+            const cards = currentScreen.querySelectorAll('.glass-card');
+            cards.forEach(card => {
+                card.style.animation = 'none';
+                card.offsetHeight; // форсируем перерисовку
+                card.style.animation = 'fadeInUp 0.3s ease forwards';
+            });
         }
 
-        const typeBadge = typeDisplay ? `<div class="lesson-type">${typeDisplay}</div>` : '';
-        const subText = mode === 'group' ? (l.teacher || '---') : `Группа: ${l.group || '---'}`;
-        const subIcon = mode === 'group' ? '👨‍🏫' : '👥';
-
-        return `
-            <div class="lesson-row">
-                <div class="time-block">
-                    <span class="time-start">${tStart}</span>
-                    <span class="time-end">${tEnd}</span>
-                </div>
-                <div style="flex: 1;">
-                    ${typeBadge}
-                    <div style="font-weight: 800; font-size: 15px; margin-bottom: 4px; line-height: 1.2;">${fullName}</div>
-                    <div style="display: flex; gap: 10px; opacity: 0.7; font-size: 12px; font-weight: 600;">
-                        <span>📍 ${l.room || '---'}</span>
-                        <span>${subIcon} ${subText}</span>
-                    </div>
-                </div>
-            </div>`;
-    }
-
-    async function loadSchedule(group) {
-        const track = document.getElementById('schedule-track');
-        track.innerHTML = '<div class="day-column"><div class="glass-card">Загрузка...</div></div>';
-        try {
-            const r = await fetch(`${API_BASE}/schedule/${encodeURIComponent(group)}`);
-            const data = await r.json();
-            const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        function goToDay(idx) {
+            if (idx < 0 || idx > 5) return;
+            currentDayIndex = idx;
+            localStorage.setItem('vsu_last_day', idx);
             
-            track.innerHTML = days.map(day => {
-                const lessons = data.schedule[day] || [];
-                return `<div class="day-column">
-                    <div class="glass-card" style="margin-bottom:120px;">
-                        <div style="font-weight:900; color:var(--primary-solid); border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px; font-size:14px;">${day.toUpperCase()}</div>
-                        ${lessons.length ? lessons.map(l => renderLessonRow(l, 'group')).join('') : '<div style="opacity:0.5; padding:40px 0; text-align:center;">Пар нет</div>'}
+            const track = document.getElementById('schedule-track');
+            if (track) track.style.transform = `translateX(-${idx * 16.666}%)`;
+            document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+            
+            // Анимируем карточки в выбранном дне
+            const dayColumns = document.querySelectorAll('.day-column');
+            const cards = dayColumns[idx].querySelectorAll('.glass-card');
+            cards.forEach(card => {
+                card.style.animation = 'none';
+                card.offsetHeight;
+                card.style.animation = 'fadeInUp 0.3s ease forwards';
+            });
+        }
+
+        function openThemeScreen() {
+            switchScreen(0);
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('vsu_theme', theme);
+            
+            const style = getComputedStyle(document.documentElement);
+            const b1 = document.querySelector('.blob-1');
+            const b2 = document.querySelector('.blob-2');
+            if(b1) b1.style.background = style.getPropertyValue('--blob1').trim();
+            if(b2) b2.style.background = style.getPropertyValue('--blob2').trim();
+            
+            const nav = document.querySelector('.bottom-nav');
+            if(nav) {
+                nav.style.background = style.getPropertyValue('--primary-grad');
+            }
+            
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.remove('active-theme');
+            });
+            const activeOption = document.querySelector(`[onclick="setTheme('${theme}')"]`);
+            if(activeOption) activeOption.classList.add('active-theme');
+        }
+
+        function renderLessonRow(l, mode = 'group') {
+            const timeClean = (l.time || '').replace(/[()]/g, '');
+            const timeParts = timeClean.split('-');
+            const tStart = timeParts[0] || '';
+            const tEnd = timeParts[1] || '';
+
+            let fullName = l.name || '';
+            let typeDisplay = '';
+            
+            const typeMatch = fullName.match(/\((Лек|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
+            if (typeMatch) {
+                typeDisplay = typeMap[typeMatch[1]] || typeMatch[1];
+                fullName = fullName.replace(typeMatch[0], '').trim();
+            }
+
+            const typeBadge = typeDisplay ? `<div class="lesson-type">${typeDisplay}</div>` : '';
+            const subText = mode === 'group' ? (l.teacher || '---') : `Группа: ${l.group || '---'}`;
+            const subIcon = mode === 'group' ? '👨‍🏫' : '👥';
+
+            return `
+                <div class="lesson-row">
+                    <div class="time-block">
+                        <span class="time-start">${tStart}</span>
+                        <span class="time-end">${tEnd}</span>
+                    </div>
+                    <div style="flex: 1;">
+                        ${typeBadge}
+                        <div style="font-weight: 800; font-size: 15px; margin-bottom: 4px; line-height: 1.2;">${fullName}</div>
+                        <div style="display: flex; gap: 10px; opacity: 0.7; font-size: 12px; font-weight: 600;">
+                            <span>📍 ${l.room || '---'}</span>
+                            <span>${subIcon} ${subText}</span>
+                        </div>
                     </div>
                 </div>`;
-            }).join('');
-
-            // --- ЛОГИКА ВОССТАНОВЛЕНИЯ ДНЯ ---
-            const lastDay = localStorage.getItem('vsu_last_day');
-            if(lastDay !== null) {
-                goToDay(parseInt(lastDay));
-            } else { 
-                let d = new Date().getDay(); 
-                goToDay(d === 0 ? 0 : d - 1); 
-            }
-            switchScreen(1);
-        } catch (e) { 
-            track.innerHTML = '<div class="day-column"><div class="glass-card">Ошибка загрузки</div></div>'; 
         }
-    }
 
-    async function searchTeacher() {
-        const nameInput = document.getElementById('teacher-input').value.trim();
-        if(nameInput.length < 3) return alert("Введите хотя бы 3 буквы фамилии");
-        const resDiv = document.getElementById('teacher-results');
-        resDiv.innerHTML = '<div class="glass-card">🔍 Поиск...</div>';
-        try {
-            const r = await fetch(`${API_BASE}/teacher/${encodeURIComponent(nameInput)}`);
-            const data = await r.json();
-            if(!data.schedule || Object.keys(data.schedule).length === 0) {
-                resDiv.innerHTML = '<div class="glass-card">Не найден</div>';
-                return;
-            }
-            teacherCache = {};
-            Object.entries(data.schedule).forEach(([day, lessons]) => {
-                lessons.forEach(l => {
-                    const tName = l.teacher || "Неизвестно";
-                    if (!teacherCache[tName]) teacherCache[tName] = {};
-                    if (!teacherCache[tName][day]) teacherCache[tName][day] = [];
-                    teacherCache[tName][day].push(l);
-                });
-            });
-            const names = Object.keys(teacherCache).sort();
-            if (names.length === 1) renderTeacherSchedule(names[0]);
-            else {
-                let html = '<div class="glass-card"><label class="field-label">НАЙДЕНО:</label>';
-                names.forEach(n => {
-                    html += `<button class="action-btn" style="background:var(--card-bg); color:var(--text); border:1px solid var(--primary); margin-top:8px;" 
-                            onclick="renderTeacherSchedule('${n.replace(/'/g, "\\'")}')">${n}</button>`;
-                });
-                resDiv.innerHTML = html + '</div>';
-            }
-        } catch(e) { resDiv.innerHTML = '<div class="glass-card">Ошибка</div>'; }
-    }
+        async function loadSchedule(group) {
+            const track = document.getElementById('schedule-track');
+            track.innerHTML = '<div class="day-column"><div class="glass-card">Загрузка...</div></div>';
+            try {
+                const r = await fetch(`${API_BASE}/schedule/${encodeURIComponent(group)}`);
+                const data = await r.json();
+                const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+                
+                track.innerHTML = days.map(day => {
+                    const lessons = data.schedule[day] || [];
+                    return `<div class="day-column">
+                        <div class="glass-card" style="margin-bottom: 20px;">
+                            <div style="font-weight:900; color:var(--primary-solid); border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px; font-size:14px;">${day.toUpperCase()}</div>
+                            ${lessons.length ? lessons.map(l => renderLessonRow(l, 'group')).join('') : '<div style="opacity:0.5; padding:40px 0; text-align:center;">Пар нет</div>'}
+                        </div>
+                    </div>`;
+                }).join('');
 
-    function renderTeacherSchedule(tName) {
-        const resDiv = document.getElementById('teacher-results');
-        const sched = teacherCache[tName];
-        const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-        let html = `<div style="text-align:center; font-weight:900; margin-bottom:15px; color:var(--primary-solid); font-size:18px;">${tName}</div>
-                    <button class="action-btn" style="background:#64748b; margin-bottom:20px;" onclick="searchTeacher()">⬅️ Назад</button>`;
-        days.forEach(day => {
-            if(sched[day]) {
-                html += `<div class="glass-card"><div style="font-weight:900; color:var(--primary-solid); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:12px; font-size:12px;">${day.toUpperCase()}</div>`;
-                sched[day].sort((a,b) => a.time.localeCompare(b.time)).forEach(l => {
-                    html += renderLessonRow(l, 'teacher');
-                });
-                html += `</div>`;
-            }
-        });
-        resDiv.innerHTML = html;
-    }
-
-    async function loadGroups(fac) {
-        const gSel = document.getElementById('group-select');
-        document.getElementById('group-area').style.display = 'block';
-        gSel.innerHTML = '<option>...</option>';
-        try {
-            const r = await fetch(`${API_BASE}/faculties/${encodeURIComponent(fac)}/groups`);
-            const data = await r.json();
-            gSel.innerHTML = '<option disabled selected>Выберите группу...</option>' + 
-                            data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
-        } catch(e) { gSel.innerHTML = '<option>Ошибка</option>'; }
-    }
-
-    async function init() {
-        fixFullHeight();
-        window.addEventListener('resize', fixFullHeight);
-        setTheme(localStorage.getItem('vsu_theme') || 'light');
-        
-        const fSel = document.getElementById('fac-select');
-        try {
-            const r = await fetch(`${API_BASE}/faculties`);
-            const data = await r.json();
-            fSel.innerHTML = '<option disabled selected>Выберите факультет...</option>' + 
-                            data.faculties.map(f => `<option value="${f}">${f}</option>`).join('');
-            
-            const savedF = localStorage.getItem('vsu_fac'), 
-                  savedG = localStorage.getItem('vsu_group');
-            if (savedF) {
-                fSel.value = savedF; await loadGroups(savedF);
-                if (savedG) { 
-                    document.getElementById('group-select').value = savedG; 
-                    loadSchedule(savedG); 
+                const lastDay = localStorage.getItem('vsu_last_day');
+                if(lastDay !== null) {
+                    goToDay(parseInt(lastDay));
+                } else { 
+                    let d = new Date().getDay(); 
+                    goToDay(d === 0 ? 0 : d - 1); 
                 }
+                switchScreen(2);
+            } catch (e) { 
+                track.innerHTML = '<div class="day-column"><div class="glass-card">Ошибка загрузки</div></div>'; 
             }
-        } catch (e) { fSel.innerHTML = '<option>Ошибка сети</option>'; }
-    }
+        }
 
-    document.getElementById('fac-select').onchange = (e) => { 
-        localStorage.setItem('vsu_fac', e.target.value); 
-        loadGroups(e.target.value); 
-    };
-    document.getElementById('group-select').onchange = (e) => { 
-        localStorage.setItem('vsu_group', e.target.value); 
-        loadSchedule(e.target.value); 
-    };
-    
-    const swiperBox = document.getElementById('schedule-swiper');
-    swiperBox.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, {passive: true});
-    swiperBox.addEventListener('touchend', e => {
-        const diff = touchStartX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 60) diff > 0 ? goToDay(currentDayIndex + 1) : goToDay(currentDayIndex - 1);
-    }, {passive: true});
+        async function searchTeacher() {
+            const nameInput = document.getElementById('teacher-input').value.trim();
+            if(nameInput.length < 3) return alert("Введите хотя бы 3 буквы фамилии");
+            const resDiv = document.getElementById('teacher-results');
+            resDiv.innerHTML = '<div class="glass-card">🔍 Поиск...</div>';
+            try {
+                const r = await fetch(`${API_BASE}/teacher/${encodeURIComponent(nameInput)}`);
+                const data = await r.json();
+                if(!data.schedule || Object.keys(data.schedule).length === 0) {
+                    resDiv.innerHTML = '<div class="glass-card">Не найден</div>';
+                    return;
+                }
+                teacherCache = {};
+                Object.entries(data.schedule).forEach(([day, lessons]) => {
+                    lessons.forEach(l => {
+                        const tName = l.teacher || "Неизвестно";
+                        if (!teacherCache[tName]) teacherCache[tName] = {};
+                        if (!teacherCache[tName][day]) teacherCache[tName][day] = [];
+                        teacherCache[tName][day].push(l);
+                    });
+                });
+                const names = Object.keys(teacherCache).sort();
+                if (names.length === 1) renderTeacherSchedule(names[0]);
+                else {
+                    let html = '<div class="glass-card"><label class="field-label">НАЙДЕНО:</label>';
+                    names.forEach(n => {
+                        html += `<button class="action-btn" style="background:var(--card-bg); color:var(--text); border:1px solid var(--primary); margin-top:8px;" 
+                                onclick="renderTeacherSchedule('${n.replace(/'/g, "\\'")}')">${n}</button>`;
+                    });
+                    resDiv.innerHTML = html + '</div>';
+                }
+            } catch(e) { 
+                resDiv.innerHTML = '<div class="glass-card">Ошибка</div>'; 
+            }
+        }
 
-    init();
-</script>
+        function renderTeacherSchedule(tName) {
+            const resDiv = document.getElementById('teacher-results');
+            const sched = teacherCache[tName];
+            const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+            let html = `<div style="text-align:center; font-weight:900; margin-bottom:15px; color:var(--primary-solid); font-size:18px;">${tName}</div>
+                        <button class="action-btn" style="background:#64748b; margin-bottom:20px;" onclick="searchTeacher()">⬅️ Назад</button>`;
+            
+            days.forEach((day, index) => {
+                if(sched[day]) {
+                    html += `<div class="glass-card teacher-result" style="animation-delay: ${index * 0.1}s;">
+                                <div style="font-weight:900; color:var(--primary-solid); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:12px; font-size:12px;">${day.toUpperCase()}</div>`;
+                    sched[day].sort((a,b) => a.time.localeCompare(b.time)).forEach(l => {
+                        html += renderLessonRow(l, 'teacher');
+                    });
+                    html += `</div>`;
+                }
+            });
+            resDiv.innerHTML = html;
+        }
+
+        async function loadGroups(fac) {
+            const gSel = document.getElementById('group-select');
+            document.getElementById('group-area').style.display = 'block';
+            gSel.innerHTML = '<option>...</option>';
+            try {
+                const r = await fetch(`${API_BASE}/faculties/${encodeURIComponent(fac)}/groups`);
+                const data = await r.json();
+                gSel.innerHTML = '<option disabled selected>Выберите группу...</option>' + 
+                                data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
+            } catch(e) { 
+                gSel.innerHTML = '<option>Ошибка</option>'; 
+            }
+        }
+
+        async function init() {
+            const container = document.getElementById('screens-container');
+            container.style.transition = 'none';
+            container.style.transform = 'translateX(-50%)';
+            
+            document.querySelectorAll('.nav-item').forEach((n, i) => {
+                n.classList.toggle('active', i === 1);
+            });
+            
+            setTheme(localStorage.getItem('vsu_theme') || 'light');
+            
+            setTimeout(() => {
+                container.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+            }, 100);
+            
+            const fSel = document.getElementById('fac-select');
+            try {
+                const r = await fetch(`${API_BASE}/faculties`);
+                const data = await r.json();
+                fSel.innerHTML = '<option disabled selected>Выберите факультет...</option>' + 
+                                data.faculties.map(f => `<option value="${f}">${f}</option>`).join('');
+                
+                const savedF = localStorage.getItem('vsu_fac'), 
+                    savedG = localStorage.getItem('vsu_group');
+                if (savedF) {
+                    fSel.value = savedF; 
+                    await loadGroups(savedF);
+                    if (savedG) { 
+                        document.getElementById('group-select').value = savedG; 
+                        loadSchedule(savedG); 
+                    }
+                }
+            } catch (e) { 
+                fSel.innerHTML = '<option>Ошибка сети</option>'; 
+            }
+        }
+
+        document.getElementById('fac-select').onchange = (e) => { 
+            localStorage.setItem('vsu_fac', e.target.value); 
+            loadGroups(e.target.value); 
+        };
+        
+        document.getElementById('group-select').onchange = (e) => { 
+            localStorage.setItem('vsu_group', e.target.value); 
+            loadSchedule(e.target.value); 
+        };
+        
+        const swiperBox = document.getElementById('schedule-swiper');
+        if(swiperBox) {
+            swiperBox.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, {passive: true});
+            swiperBox.addEventListener('touchend', e => {
+                const diff = touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 60) diff > 0 ? goToDay(currentDayIndex + 1) : goToDay(currentDayIndex - 1);
+            }, {passive: true});
+        }
+
+        init();
+    </script>
 </body>
 </html>
