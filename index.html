@@ -7,9 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ВГУ Mobile</title>
     
-    <link rel="stylesheet" href="https://sibforms.com/font/line-seed-jp.css">
     <style>
     /* 1. СИСТЕМА ПЕРЕМЕННЫХ И ТЕМ */
+    
+    @import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=LINE+Seed+JP&display=swap');
     :root {
         --bg: #f1f5f9; 
         --primary: #2563eb; 
@@ -78,6 +79,9 @@
         box-sizing: border-box; 
         -webkit-tap-highlight-color: transparent; 
         outline: none;
+        font-family: "Balsamiq Sans", sans-serif;
+        font-weight: 700;
+        font-style: normal;
     }
 
     body {
@@ -663,6 +667,7 @@
 
         const typeMap = {
             'Лек': 'Лекция',
+            'Лек (off)': 'Оффлайн Лекция',
             'Лаб': 'Лабораторная работа',
             'ПЗ': 'Практическое занятие',
             'Пр': 'Практическое занятие',
@@ -757,7 +762,7 @@
             let fullName = l.name || '';
             let typeDisplay = '';
             
-            const typeMatch = fullName.match(/\((Лек|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
+            const typeMatch = fullName.match(/\((Лек(?: \(off\))?|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
             if (typeMatch) {
                 typeDisplay = typeMap[typeMatch[1]] || typeMatch[1];
                 fullName = fullName.replace(typeMatch[0], '').trim();
@@ -777,7 +782,7 @@
                         ${typeBadge}
                         <div style="font-weight: 800; font-size: 15px; margin-bottom: 4px; line-height: 1.2;">${fullName}</div>
                         <div style="display: flex; gap: 10px; opacity: 0.7; font-size: 12px; font-weight: 600;">
-                            <span>📍 ${l.room || '---'}</span>
+                            <span>📍 ${l.room || '-'}</span>
                             <span>${subIcon} ${subText}</span>
                         </div>
                     </div>
