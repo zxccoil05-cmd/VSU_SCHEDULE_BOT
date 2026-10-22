@@ -8,18 +8,17 @@
 <title>ВГУ Mobile</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@400;700;800&display=swap');
-
 /* === ПЕРЕМЕННЫЕ И ТЕМЫ === */
 :root{
   --ease:cubic-bezier(.16,1,.3,1);
   --ease-spring:cubic-bezier(.34,1.56,.64,1);
-  --bg:#f1f5f9;--primary:#2563eb;--primary-solid:#2563eb;
-  --primary-grad:linear-gradient(135deg,#2563eb,#3b82f6);
-  --glass:rgba(226,232,240,.7);--border:rgba(148,163,184,.3);
-  --text:#0f172a;--card-bg:#fff;--blob1:#3b82f6;--blob2:#93c5fd;
+  --bg:#f5f7fb;--primary:#4f46e5;--primary-solid:#4f46e5;
+  --primary-grad:linear-gradient(135deg,#5b5cf0,#9b6cff);
+  --glass:rgba(255,255,255,.78);--border:rgba(100,116,139,.14);
+  --text:#171827;--card-bg:rgba(255,255,255,.94);--blob1:#7c6cf5;--blob2:#63c9e8;
+  --ambient:rgba(101,91,239,.12);
 }
-[data-theme="dark"]{--bg:#343434;--primary:#969696;--primary-solid:#9c9c9c;--primary-grad:linear-gradient(135deg,#6a6a6a,#7c7c7c);--text:#f1f5f9;--card-bg:#3e3e3e;--blob1:#282828;--blob2:#363636;--glass:rgba(48,48,48,.7);--border:rgba(88,88,88,.8);}
+[data-theme="dark"]{--bg:#000;--primary:#a78bfa;--primary-solid:#a78bfa;--primary-grad:linear-gradient(135deg,#7658ed,#bd75f4);--text:#f5f3ff;--card-bg:#0b0b10;--blob1:#6d4aff;--blob2:#a855f7;--glass:rgba(15,15,22,.9);--border:rgba(196,181,253,.14);--ambient:rgba(109,74,255,.1);}
 [data-theme="red"]{--bg:#450a0a;--primary:#ef4444;--primary-solid:#ef4444;--primary-grad:linear-gradient(135deg,#ef4444,#f87171);--text:#fee2e2;--card-bg:#7f1d1d;--blob1:#991b1b;--blob2:#450a0a;--border:#991b1b;--glass:rgba(127,29,29,.6);}
 [data-theme="neon"]{--bg:#000;--primary:#06b6d4;--primary-solid:#06b6d4;--primary-grad:linear-gradient(135deg,#06b6d4,#22d3ee);--text:#cffafe;--card-bg:#083344;--blob1:#0e7490;--blob2:#000;--border:#06b6d4;--glass:rgba(8,145,178,.2);}
 [data-theme="pink"]{--bg:#fdf2f8;--primary:#db2777;--primary-solid:#db2777;--primary-grad:linear-gradient(135deg,#db2777,#f472b6);--text:#831843;--card-bg:#fff;--blob1:#f472b6;--blob2:#fbcfe8;--border:#f9a8d4;--glass:rgba(251,207,232,.6);}
@@ -124,6 +123,9 @@ body{font-weight:700;margin:0;padding:0;background:var(--bg);color:var(--text);h
 
 /* === ФОРМЫ === */
 .select-bar{display:flex;flex-direction:column;gap:10px;}
+.subgroup-select-bar{margin:16px 0 8px;gap:12px;}
+.subgroup-select-bar .field-label{margin-bottom:2px;}
+.subgroup-select-bar select{margin-top:2px;}
 .field-label{font-weight:800;font-size:11px;letter-spacing:.5px;background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;color:transparent;display:flex;align-items:center;gap:6px;}
 .field-label .crown{font-size:14px;}
 select,.search-input{width:100%;padding:16px;border-radius:16px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-weight:700;font-size:14px;appearance:none;transition:border-color .2s var(--ease);}
@@ -145,6 +147,8 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .swiper-track{display:flex;width:600%;transition:transform .5s var(--ease);}
 .day-column{width:16.666%;padding:10px 5px 0;min-height:100%;}
 .day-title{font-weight:900;color:var(--primary-solid);border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:15px;font-size:12px;}
+.subgroup-schedule-block+.subgroup-schedule-block{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.subgroup-schedule-title{font-weight:800;font-size:11px;color:var(--primary-solid);margin-bottom:4px;}
 
 .lesson-row{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--border);transition:background .3s var(--ease);}
 .lesson-row:last-child{border-bottom:none;}
@@ -318,6 +322,114 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 @keyframes shimmer{to{background-position:200% center;}}
 @keyframes progress{0%{transform:translateX(-100%);}100%{transform:translateX(300%);}}
 @keyframes bgPulse{0%,100%{transform:scale(1);opacity:.15;}50%{transform:scale(1.3);opacity:.25;}}
+
+[data-theme="dark"]{--bg:#000;--primary:#a78bfa;--primary-solid:#a78bfa;--primary-grad:linear-gradient(135deg,#7658ed,#bd75f4);--text:#f5f3ff;--card-bg:#0b0b10;--blob1:#6d4aff;--blob2:#a855f7;--glass:rgba(15,15,22,.9);--border:rgba(196,181,253,.14);--ambient:rgba(109,74,255,.1);}
+[data-theme="red"]{--bg:#fff6f6;--primary:#e34b68;--primary-solid:#e34b68;--primary-grad:linear-gradient(135deg,#ef476f,#ff8a70);--text:#30151d;--card-bg:rgba(255,255,255,.94);--blob1:#ff758f;--blob2:#ffb199;--border:rgba(227,75,104,.16);--glass:rgba(255,255,255,.8);--ambient:rgba(239,71,111,.11);}
+[data-theme="neon"]{--bg:#061012;--primary:#54f2c2;--primary-solid:#54f2c2;--primary-grad:linear-gradient(135deg,#00d4aa,#39d9ff);--text:#e6fff9;--card-bg:#09191a;--blob1:#00d4aa;--blob2:#007dff;--border:rgba(84,242,194,.18);--glass:rgba(7,24,24,.88);--ambient:rgba(0,212,170,.1);}
+[data-theme="pink"]{--bg:#fff5fa;--primary:#d9469a;--primary-solid:#d9469a;--primary-grad:linear-gradient(135deg,#e440a7,#a66cff);--text:#35162d;--card-bg:rgba(255,255,255,.94);--blob1:#f472b6;--blob2:#c084fc;--border:rgba(217,70,154,.16);--glass:rgba(255,255,255,.8);--ambient:rgba(217,70,154,.1);}
+[data-theme="dark-pink"]{--bg:#08030a;--primary:#fb78c5;--primary-solid:#fb78c5;--primary-grad:linear-gradient(135deg,#ec4899,#9b5cff);--text:#fff0fa;--card-bg:#130b16;--blob1:#ec4899;--blob2:#7c3aed;--glass:rgba(19,11,22,.9);--border:rgba(251,120,197,.18);--ambient:rgba(236,72,153,.1);}
+[data-theme="forest"]{--bg:#f1faf6;--primary:#168b6a;--primary-solid:#168b6a;--primary-grad:linear-gradient(135deg,#11998e,#38c979);--text:#102b25;--card-bg:rgba(255,255,255,.94);--blob1:#33c98b;--blob2:#54c9d0;--glass:rgba(255,255,255,.8);--border:rgba(22,139,106,.16);--ambient:rgba(17,153,142,.1);}
+[data-theme="aurora"]{--bg:#080b18;--primary:#a78bfa;--primary-solid:#a78bfa;--primary-grad:linear-gradient(120deg,#5eead4,#818cf8 52%,#e879f9);--text:#f4f2ff;--card-bg:#101326;--blob1:#4f46e5;--blob2:#06b6d4;--glass:rgba(16,19,38,.9);--border:rgba(167,139,250,.2);--ambient:rgba(95,77,226,.16);}
+[data-theme="sunset"]{--bg:#fff7f1;--primary:#e85d4a;--primary-solid:#e85d4a;--primary-grad:linear-gradient(120deg,#ff7a59,#ffb347 55%,#f06b9a);--text:#35201e;--card-bg:rgba(255,255,255,.92);--blob1:#ff8a65;--blob2:#f472b6;--glass:rgba(255,255,255,.8);--border:rgba(232,93,74,.17);--ambient:rgba(255,122,89,.13);}
+
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background-image:radial-gradient(ellipse at 12% 8%,var(--ambient,rgba(101,91,239,.12)),transparent 42%);background-attachment:fixed;}
+*{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+.background-blobs{opacity:.42;}
+.blob{filter:blur(82px);opacity:.3;}
+.screen{padding:0 18px;}
+.header{padding-top:26px;}
+.logo{justify-content:flex-start;padding:0 4px;}
+.logo-img{width:40px;height:40px;border-radius:14px;object-fit:cover;}
+.logo-text{font-size:17px;letter-spacing:1.4px;text-shadow:none;}
+.profile-card,.glass-card{background:var(--card-bg);border:1px solid var(--border);border-radius:22px;box-shadow:0 12px 36px rgba(15,23,42,.055);}
+[data-theme="dark"] .profile-card,[data-theme="dark"] .glass-card,[data-theme="aurora"] .profile-card,[data-theme="aurora"] .glass-card,[data-theme="dark-pink"] .profile-card,[data-theme="dark-pink"] .glass-card{box-shadow:0 18px 50px rgba(0,0,0,.36);}
+.profile-card{padding:18px;margin-top:16px!important;}
+.profile-avatar{width:58px;height:58px;border:2px solid var(--card-bg);}
+.profile-name{font-size:18px;}
+.settings-btn{width:40px;height:40px;top:12px;right:12px;border-radius:14px;font-size:16px;background:var(--glass);}
+.glass-card{padding:18px;gap:14px;}
+.select-bar{gap:8px;}
+.field-label{font-size:10px;letter-spacing:1px;}
+select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass);font-size:13px;}
+.subgroup-select-bar{margin:18px 0 10px;gap:10px;padding-top:14px;border-top:1px solid var(--border);}
+.subgroup-select-bar .field-label{margin-bottom:3px;}
+.subgroup-select-bar select{margin-top:3px;}
+.action-btn{border-radius:14px;background:var(--primary-grad);box-shadow:0 8px 20px color-mix(in srgb,var(--primary-solid) 20%,transparent);font-size:12px;}
+.action-btn.secondary{background:var(--glass);color:var(--text);border:1px solid var(--border);box-shadow:none;}
+.days-tabs{height:56px;border-radius:18px;background:var(--card-bg);box-shadow:0 8px 28px rgba(15,23,42,.06);}
+.day-tab{font-size:10px;}
+.day-tab.active{box-shadow:0 5px 16px color-mix(in srgb,var(--primary-solid) 30%,transparent);}
+.glass-card .day-title{font-size:11px;letter-spacing:1px;}
+.lesson-row{gap:13px;padding:15px 0;}
+.time-block{min-width:54px;}
+.time-start{font-size:15px;}
+.lesson-title{font-size:12px;line-height:1.4;}
+.lesson-meta{align-items:center;gap:12px;font-size:9px;}
+.bottom-nav{left:18px;right:18px;bottom:max(14px,env(safe-area-inset-bottom));height:68px;border:1px solid rgba(255,255,255,.2);border-radius:22px;background:var(--primary-grad);box-shadow:0 14px 40px rgba(20,20,40,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+.nav-item{gap:3px;font-size:9px;font-weight:700;}
+.nav-item span:first-child{font-size:0;}
+.nav-item.active{color:#fff;}
+.nav-icon{width:21px;height:21px;transition:transform .25s var(--ease-spring);}
+.nav-item.active .nav-icon{transform:translateY(-2px) scale(1.08);}
+.icon{width:18px;height:18px;display:inline-block;vertical-align:middle;flex:none;}
+.button-icon{width:16px;height:16px;vertical-align:-3px;margin-right:7px;}
+.crown .icon{width:15px;height:15px;color:#f5b942;}
+.field-label .crown{display:inline-flex;align-items:center;}
+#loader{gap:26px;background:var(--bg);}
+.loader-logo{width:104px;height:104px;border-radius:32px;background:var(--card-bg);box-shadow:0 24px 80px color-mix(in srgb,var(--primary-solid) 22%,transparent);}
+.loader-icon{display:grid;place-items:center;color:var(--primary-solid);animation:float 2s ease-in-out infinite;}
+.loader-icon .icon{width:42px;height:42px;}
+.loader-ring{inset:-9px!important;border-width:2px!important;opacity:.75;}
+.loader-ring:nth-child(2){inset:-17px!important;opacity:.4;}
+.loader-ring:nth-child(3){inset:-25px!important;opacity:.22;}
+.loader-title{font-size:20px;letter-spacing:2px;}
+.loader-subtitle{letter-spacing:1.5px;font-size:9px;}
+.loader-bar{height:3px;border-radius:10px;}
+.modal-sheet{background:var(--bg);border-radius:28px 28px 0 0;}
+.modal-header{background:var(--bg);}
+.modal-header h2{font-size:17px;}
+.modal-close{border-radius:13px;font-size:20px;}
+.themes-grid{gap:10px;}
+.theme-option{border-radius:16px;padding:13px;background:var(--card-bg);border-color:var(--border);}
+.theme-label{display:flex;align-items:center;gap:9px;min-width:0;}
+.theme-swatch{width:18px;height:18px;border-radius:7px;background:var(--swatch);box-shadow:0 2px 8px rgba(0,0,0,.12);flex:none;}
+.theme-option[data-theme="light"]{--swatch:linear-gradient(135deg,#5b5cf0,#9b6cff);}
+.theme-option[data-theme="dark"]{--swatch:linear-gradient(135deg,#111,#7658ed);}
+.theme-option[data-theme="forest"]{--swatch:linear-gradient(135deg,#11998e,#38c979);}
+.theme-option[data-theme="red"]{--swatch:linear-gradient(135deg,#ef476f,#ff8a70);}
+.theme-option[data-theme="neon"]{--swatch:linear-gradient(135deg,#00d4aa,#39d9ff);}
+.theme-option[data-theme="pink"]{--swatch:linear-gradient(135deg,#e440a7,#a66cff);}
+.theme-option[data-theme="dark-pink"]{--swatch:linear-gradient(135deg,#ec4899,#9b5cff);}
+.theme-option[data-theme="aurora"]{--swatch:linear-gradient(120deg,#5eead4,#818cf8,#e879f9);}
+.theme-option[data-theme="sunset"]{--swatch:linear-gradient(120deg,#ff7a59,#ffb347,#f06b9a);}
+.check{display:grid;place-items:center;}
+.check .icon{width:16px;height:16px;}
+.admin-panel{position:relative;overflow:hidden;border-color:color-mix(in srgb,var(--primary-solid) 22%,var(--border));}
+.admin-panel::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--primary-grad);}
+.admin-panel-heading{display:flex;align-items:center;gap:13px;}
+.admin-panel-emblem{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:var(--primary-grad);color:#fff;box-shadow:0 8px 18px color-mix(in srgb,var(--primary-solid) 25%,transparent);}
+.admin-panel-emblem .icon{width:21px;height:21px;}
+.admin-panel-title{font-size:14px;font-weight:800;letter-spacing:.1px;}
+.admin-panel-caption{font-size:10px;opacity:.58;margin-top:3px;}
+.admin-overview{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:15px;background:var(--glass);}
+.admin-overview-label{font-size:10px;opacity:.68;}
+.admin-total{font-size:17px;font-weight:800;color:var(--primary-solid);}
+.admin-search{margin-top:4px;}
+.admin-users-list{gap:9px;max-height:40vh;overflow:auto;padding-right:2px;}
+.admin-user-card{border-radius:15px;background:var(--glass);padding:13px;}
+.admin-user-name{font-size:12px;}
+.admin-user-meta{font-size:9px;line-height:1.7;}
+.admin-user-actions{margin-top:12px;}
+.admin-user-action{border-radius:12px;padding:11px 9px;font-size:10px;}
+.admin-users-status{min-height:16px;font-size:10px;}
+.access-emblem{display:grid;place-items:center;}
+.access-emblem .icon{width:38px;height:38px;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@media (min-width:700px){
+  .screen{padding-left:max(24px,calc((100vw - 560px)/2));padding-right:max(24px,calc((100vw - 560px)/2));}
+  .bottom-nav{left:50%;right:auto;width:min(440px,calc(100vw - 36px));transform:translateX(-50%);}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}
 </style>
 </head>
 <body>
@@ -328,7 +440,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
     <div class="loader-ring"></div>
     <div class="loader-ring"></div>
     <div class="loader-ring"></div>
-    <div class="loader-icon">📚</div>
+    <div class="loader-icon" id="loader-icon" aria-hidden="true"></div>
   </div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
     <div class="loader-title">ВГУ MOBILE</div>
@@ -352,7 +464,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
           <div class="logo">
             <img src="img/logo.png" class="logo-img" alt="logo">
             <span class="logo-text">ВГУ Mobile</span>
-            <span class="crown" id="logo-crown" style="display:none;">👑</span>
+            <span class="crown" id="logo-crown" style="display:none;"></span>
           </div>
         </div>
       </header>
@@ -360,16 +472,34 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
       <div class="content-scroll">
         <!-- Профиль -->
         <div class="profile-card" style="margin-top:20px;">
-          <button class="settings-btn" onclick="openSettings()" aria-label="Настройки">⚙️</button>
+          <button class="settings-btn" id="settings-button" onclick="openSettings()" aria-label="Настройки"><span id="settings-button-icon"></span></button>
           <div class="profile-avatar" id="profile-avatar">?</div>
           <div class="profile-info">
             <div class="profile-greeting" id="profile-greeting">Добрый день</div>
             <div class="profile-name">
               <span id="profile-name-text">Гость</span>
-              <span class="crown" id="profile-crown" style="display:none;">👑</span>
+              <span class="crown" id="profile-crown" style="display:none;"></span>
             </div>
           </div>
         </div>
+
+        <section class="glass-card admin-panel" id="admin-section" hidden>
+          <div class="admin-panel-heading">
+            <div class="admin-panel-emblem" id="admin-panel-icon" aria-hidden="true"></div>
+            <div>
+              <div class="admin-panel-title">Панель администратора</div>
+              <div class="admin-panel-caption">Пользователи и управление доступом</div>
+            </div>
+          </div>
+          <div class="admin-overview">
+            <span class="admin-overview-label">Пользователей в системе</span>
+            <span class="admin-total" id="admin-total">—</span>
+          </div>
+          <button class="action-btn secondary" id="load-users-btn" type="button" onclick="loadUsers()"></button>
+          <input class="search-input admin-search" id="admin-search" type="search" placeholder="Найти по имени, @username или ID" autocomplete="off" hidden>
+          <div class="admin-users-status" id="admin-users-status" role="status"></div>
+          <div class="admin-users-list" id="admin-users-list"></div>
+        </section>
 
         <!-- Выбор группы -->
         <div class="glass-card">
@@ -381,15 +511,15 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
             <div class="select-bar">
               <label class="field-label">
                 <span>ОСНОВНАЯ ГРУППА</span>
-                <span class="crown" id="group-crown" style="display:none;">👑</span>
+                <span class="crown" id="group-crown" style="display:none;"></span>
               </label>
               <select id="group-select"></select>
             </div>
-            <div class="select-bar" id="subgroup-area" style="display:none;">
+            <div class="select-bar subgroup-select-bar" id="subgroup-area" style="display:none;">
               <label class="field-label">ПОДГРУППА</label>
               <select id="subgroup-select"></select>
             </div>
-            <button class="action-btn" onclick="switchScreen(1)">📅 Перейти в расписание</button>
+            <button class="action-btn" id="open-schedule-icon" onclick="switchScreen(1)"></button>
           </div>
         </div>
       </div>
@@ -409,7 +539,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
         <h1 class="logo" style="margin:20px 0;">Поиск</h1>
         <div class="glass-card">
           <input type="text" id="teacher-input" class="search-input" placeholder="Фамилия преподавателя...">
-          <button class="action-btn" onclick="searchTeacher()">🔍 Найти</button>
+          <button class="action-btn" id="search-button-icon" onclick="searchTeacher()"></button>
         </div>
         <div id="teacher-results"></div>
       </div>
@@ -423,7 +553,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 <section class="access-screen" id="access-screen" hidden>
   <div class="cat-particles" id="cat-particles" aria-hidden="true"></div>
   <div class="access-card" id="access-card" role="alert" aria-live="assertive">
-    <div class="access-emblem" id="access-emblem">⛔</div>
+    <div class="access-emblem" id="access-emblem"></div>
     <p class="access-eyebrow" id="access-eyebrow">Доступ ограничен</p>
     <h1 class="access-title" id="access-title">Аккаунт заблокирован</h1>
     <p class="access-message" id="access-message">Для этого аккаунта доступ к приложению закрыт.</p>
@@ -437,8 +567,8 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <h2>⚙️ Настройки</h2>
-      <button class="modal-close" onclick="closeSettings()" aria-label="Закрыть">×</button>
+      <h2>Настройки</h2>
+      <button class="modal-close" onclick="closeSettings()" aria-label="Закрыть"><span id="modal-close-icon"></span></button>
     </div>
     <div class="modal-body">
       <div class="settings-section">
@@ -448,15 +578,8 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 
       <div class="settings-section">
         <div class="field-label">СВЯЗЬ</div>
-        <button class="action-btn" onclick="window.open('https://t.me/vsu_mobile','_blank')">📢 Канал по улучшению</button>
-        <button class="action-btn btn-danger" onclick="window.open('https://t.me/wch8h','_blank')">⚠️ Нашли ошибку?</button>
-      </div>
-
-      <div class="settings-section" id="admin-section" hidden>
-        <div class="field-label">👑 АДМИН-ПАНЕЛЬ</div>
-        <button class="action-btn secondary" id="load-users-btn" type="button" onclick="loadUsers()">👥 Список пользователей</button>
-        <div class="admin-users-status" id="admin-users-status" role="status"></div>
-        <div class="admin-users-list" id="admin-users-list"></div>
+        <button class="action-btn" id="channel-button" onclick="window.open('https://t.me/vsu_mobile','_blank')"></button>
+        <button class="action-btn btn-danger" id="support-button" onclick="window.open('https://t.me/wch8h','_blank')"></button>
       </div>
 
       <div class="settings-info" id="settings-info">
@@ -471,12 +594,36 @@ const API = "https://vsu-schedule-bot-code.onrender.com/api";
 const DAYS = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const TYPE_MAP = {'Лек':'Лекция','Лек (off)':'Оффлайн Лекция','Лаб':'Лабораторная работа','ПЗ':'Практическое занятие','Пр':'Практическое занятие','Сем':'Семинар','Экз':'Экзамен','Зач':'Зачет','Куср':'КУСР'};
 const NAV_MAP = [0, 1, 2];                       // индекс экрана = индекс nav
+const ICONS = {
+  home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.2 1-1.2 2.1-1.5-.5a8 8 0 0 1-1.7 1l-.3 1.6h-2.4l-.3-1.6a8 8 0 0 1-1.7-1l-1.5.5-1.2-2.1 1.2-1a7 7 0 0 1 0-2l-1.2-1 1.2-2.1 1.5.5a8 8 0 0 1 1.7-1l.3-1.6h2.4l.3 1.6a8 8 0 0 1 1.7 1l1.5-.5 1.2 2.1-1.2 1a7 7 0 0 1 0 2z" transform="translate(-1 -1)"/>',
+  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20"/>',
+  crown: '<path d="m2 8 5 4 5-8 5 8 5-4-2 12H4z"/><path d="M5 17h14"/>',
+  shield: '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="m9 12 2 2 4-4"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  ban: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  unlock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/>',
+  pin: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+  teacher: '<path d="m3 8 9-5 9 5-9 5z"/><path d="M7 10v5c3 3 7 3 10 0v-5M21 8v7"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  warning: '<path d="m10.3 3.9-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3.1l-8-14a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/>',
+  close: '<path d="m18 6-12 12M6 6l12 12"/>',
+  refresh: '<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 17 6l3 6M4 12l3 6a7 7 0 0 0 11.4-3"/>',
+  megaphone: '<path d="m3 11 18-5v12L3 13z"/><path d="M11.6 15.4 14 21H9l-2-7M5 11v2"/>',
+  arrow: '<path d="M5 12h14m-7-7 7 7-7 7"/>'
+};
+function icon(name, className = 'icon'){
+  return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+}
 const THEMES = [
-  ['light','☀️ Светлая'],['dark','🌙 Тёмная'],['forest','🌲 Лесная'],
-  ['red','🔥 Рубиновая'],['neon','💚 Неоновая'],['pink','🌸 Розовая'],
-  ['dark-pink','💖 Розовая тём.']
+  ['light','Светлая'],['dark','Чёрная'],['aurora','Северное сияние'],
+  ['sunset','Закат'],['forest','Лесная'],['red','Рубиновая'],
+  ['neon','Неоновая'],['pink','Розовая'],['dark-pink','Ночная роза']
 ];
-const NAV = [['🏠','Главная',0],['📅','Расписание',1],['🔍','Поиск',2]];
+const NAV = [['home','Главная',0],['calendar','Расписание',1],['search','Поиск',2]];
 
 /** Минимальное время показа загрузки (мс). Можно поднять до 120000. */
 const MIN_LOADER_MS = 1200;
@@ -545,6 +692,8 @@ async function loadUsers(){
   button.disabled = true;
   status.textContent = 'Загружаю пользователей…';
   list.replaceChildren();
+  $('admin-total').textContent = '—';
+  $('admin-search').hidden = true;
 
   try {
     const response = await apiFetch(`${API}/admin/users`);
@@ -552,8 +701,12 @@ async function loadUsers(){
     if (!response.ok) throw new Error(data.detail || 'Не удалось загрузить список.');
 
     status.textContent = `Всего пользователей: ${data.users.length}`;
+    $('admin-total').textContent = data.users.length;
+    $('admin-search').hidden = data.users.length === 0;
     if (!data.users.length){
       status.textContent = 'Пока нет зарегистрированных пользователей.';
+      $('admin-total').textContent = '0';
+      $('admin-search').value = '';
       return;
     }
 
@@ -573,13 +726,19 @@ async function loadUsers(){
         user.username ? `@${user.username}` : null,
         `Добавлен: ${user.created_at ? new Date(user.created_at).toLocaleString('ru-RU') : 'неизвестно'}`
       ].filter(Boolean).join(' · ');
+      card.dataset.search = [
+        user.display_name,
+        user.first_name,
+        user.username,
+        user.telegram_id
+      ].filter(Boolean).join(' ').toLocaleLowerCase('ru');
 
       const actions = document.createElement('div');
       actions.className = 'admin-user-actions';
       const action = document.createElement('button');
       action.className = `admin-user-action ${user.is_blocked ? 'unblock' : 'block'}`;
       action.type = 'button';
-      action.textContent = user.is_blocked ? '🔓 Разблокировать' : '🚫 Заблокировать';
+      action.innerHTML = `${icon(user.is_blocked ? 'unlock' : 'ban', 'button-icon')}${user.is_blocked ? 'Разблокировать' : 'Заблокировать'}`;
       action.disabled = Number(user.telegram_id) === Number(tgUser?.telegram_id);
       action.title = action.disabled ? 'Нельзя заблокировать собственный аккаунт' : '';
       action.onclick = () => updateUserBlock(user, action);
@@ -624,7 +783,7 @@ function showAccessScreen(isBanned){
   setTimeout(() => loader.remove(), 700);
 
   $('access-screen').hidden = false;
-  $('access-emblem').textContent = isBanned ? '⛔' : '🔒';
+  $('access-emblem').innerHTML = icon(isBanned ? 'ban' : 'lock');
   $('access-eyebrow').textContent = isBanned ? 'Доступ ограничен' : 'Проверка не пройдена';
   $('access-title').textContent = isBanned ? 'Аккаунт заблокирован' : 'Не удалось войти';
   $('access-message').textContent = isBanned
@@ -678,6 +837,7 @@ function setupProfile(){
   const groupCrown = $('group-crown');
   const infoEl = $('settings-info');
   $('admin-section').hidden = !isAdmin;
+  $('admin-total').textContent = '—';
 
   const name = tgUser?.first_name || 'Гость';
   const h = new Date().getHours();
@@ -701,15 +861,16 @@ function setupProfile(){
 
   // Короны для админа
   if (isAdmin){
-    crownEl.style.display = 'inline-block';
-    logoCrown.style.display = 'inline-block';
-    groupCrown.style.display = 'inline-block';
+    [crownEl, logoCrown, groupCrown].forEach(el => {
+      el.innerHTML = icon('crown');
+      el.style.display = 'inline-flex';
+    });
   }
 
   // Инфо в модалке
   if (tgUser){
     infoEl.innerHTML = `ВГУ Mobile · <strong>v1.0</strong><br>
-      Telegram ID: ${tgUser.id}${isAdmin ? ' · <span class="crown" style="display:inline-block;">👑</span>' : ''}`;
+      Telegram ID: ${tgUser.id}${isAdmin ? ` · <span class="crown" style="display:inline-flex;">${icon('crown')}</span>` : ''}`;
   } else {
     infoEl.innerHTML = `ВГУ Mobile · <strong>v1.0</strong><br>Открыто вне Telegram`;
   }
@@ -718,9 +879,19 @@ function setupProfile(){
 /* === ГЕНЕРАЦИЯ UI === */
 function setupUI(){
   $('themes-list').innerHTML = THEMES.map(([id,l]) =>
-    `<div class="theme-option" data-theme="${id}"><span>${l}</span><span class="check">✓</span></div>`
+    `<div class="theme-option" data-theme="${id}"><span class="theme-label"><span class="theme-swatch"></span>${l}</span><span class="check">${icon('check')}</span></div>`
   ).join('');
   $$('.theme-option').forEach(o => o.onclick = () => setTheme(o.dataset.theme));
+
+  $('loader-icon').innerHTML = icon('book');
+  $('settings-button-icon').innerHTML = icon('settings');
+  $('admin-panel-icon').innerHTML = icon('shield');
+  $('load-users-btn').innerHTML = `${icon('users', 'button-icon')}Список пользователей`;
+  $('open-schedule-icon').innerHTML = `${icon('calendar', 'button-icon')}Перейти в расписание`;
+  $('search-button-icon').innerHTML = `${icon('search', 'button-icon')}Найти`;
+  $('channel-button').innerHTML = `${icon('megaphone', 'button-icon')}Канал по улучшению`;
+  $('support-button').innerHTML = `${icon('warning', 'button-icon')}Нашли ошибку?`;
+  $('modal-close-icon').innerHTML = icon('close');
 
   $('days-tabs').innerHTML = ['ПН','ВТ','СР','ЧТ','ПТ','СБ'].map((d,i) =>
     `<div class="day-tab" data-day="${i}">${d}</div>`
@@ -728,9 +899,18 @@ function setupUI(){
   $$('.day-tab').forEach(t => t.onclick = () => goToDay(+t.dataset.day));
 
   $('bottom-nav').innerHTML = NAV.map(([i,l,s]) =>
-    `<div class="nav-item" data-screen="${s}"><span>${i}</span><span>${l}</span></div>`
+    `<div class="nav-item" data-screen="${s}"><span>${icon(i, 'nav-icon')}</span><span>${l}</span></div>`
   ).join('');
   $$('.nav-item').forEach(n => n.onclick = () => switchScreen(+n.dataset.screen));
+  $('admin-search').oninput = e => {
+    const query = e.target.value.trim().toLocaleLowerCase('ru');
+    let visibleCount = 0;
+    $$('.admin-user-card').forEach(card => {
+      card.hidden = !card.dataset.search.includes(query);
+      if (!card.hidden) visibleCount++;
+    });
+    if (query) $('admin-users-status').textContent = `Найдено: ${visibleCount}`;
+  };
 }
 
 /* === НАВИГАЦИЯ (3 экрана) === */
@@ -782,7 +962,7 @@ function renderLessonRow(l, mode = 'group'){
   const m = name.match(/\((Лек(?: \(off\))?|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
   if (m){ type = TYPE_MAP[m[1]] || m[1]; name = name.replace(m[0],'').trim(); }
   const subText = mode === 'group' ? (l.teacher || '---') : `Группа: ${l.group || '---'}`;
-  const subIcon = mode === 'group' ? '👨‍🏫' : '👥';
+  const subIcon = mode === 'group' ? icon('teacher') : icon('users');
   return `<div class="lesson-row">
     <div class="time-block">
       <span class="time-start">${tStart}</span>
@@ -792,7 +972,7 @@ function renderLessonRow(l, mode = 'group'){
       ${type ? `<div class="lesson-type">${type}</div>` : ''}
       <div class="lesson-title">${name}</div>
       <div class="lesson-meta">
-        <span>📍 ${l.room || '-'}</span>
+        <span>${icon('pin')} ${l.room || '-'}</span>
         <span>${subIcon} ${subText}</span>
       </div>
     </div>
@@ -802,22 +982,44 @@ function renderLessonRow(l, mode = 'group'){
 /* === ЗАГРУЗКА РАСПИСАНИЯ ===
  * silent=true — не переключать экран (используется при старте под лоадером).
  */
-async function loadSchedule(group, faculty, subgroup = 'all', { silent = false } = {}){
+async function loadSchedule(group, faculty, subgroup = 'all', { silent = false, subgroups = [] } = {}){
   const track = $('schedule-track');
   track.innerHTML = `<div class="day-column"><div class="glass-card loading"></div></div>`;
   try {
-    const params = new URLSearchParams({faculty, subgroup});
-    const response = await apiFetch(`${API}/schedule/${encodeURIComponent(group)}?${params}`);
-    if (!response.ok) throw new Error(`Не удалось загрузить расписание: ${response.status}`);
-    const data = await response.json();
+    const selectedSubgroups = subgroup === 'all' ? subgroups : [];
+    const schedules = selectedSubgroups.length
+      ? await Promise.all(selectedSubgroups.map(async (item, index) => {
+          const selectedId = item.id || 'all';
+          const params = new URLSearchParams({faculty, subgroup: selectedId});
+          const response = await apiFetch(`${API}/schedule/${encodeURIComponent(group)}?${params}`);
+          if (!response.ok) throw new Error(`Не удалось загрузить расписание: ${response.status}`);
+          const data = await response.json();
+          return {
+            title: item.id ? `Подгруппа ${index + 1}` : 'Все подгруппы',
+            schedule: data.schedule || {}
+          };
+        }))
+      : await (async () => {
+          const params = new URLSearchParams({faculty, subgroup});
+          const response = await apiFetch(`${API}/schedule/${encodeURIComponent(group)}?${params}`);
+          if (!response.ok) throw new Error(`Не удалось загрузить расписание: ${response.status}`);
+          const data = await response.json();
+          return [{title: '', schedule: data.schedule || {}}];
+        })();
+
     track.innerHTML = DAYS.map(day => {
-      const lessons = data.schedule?.[day] || [];
       return `<div class="day-column">
         <div class="glass-card" style="margin-bottom:20px;">
           <div class="day-title">${day.toUpperCase()}</div>
-          ${lessons.length
-            ? lessons.map(l => renderLessonRow(l,'group')).join('')
-            : `<div class="empty-state"><span class="empty-icon">📚</span><span>Пар нет</span></div>`}
+          ${schedules.map(({title, schedule}) => {
+            const lessons = schedule[day] || [];
+            return `<section class="subgroup-schedule-block">
+              ${title ? `<div class="subgroup-schedule-title">${title}</div>` : ''}
+              ${lessons.length
+                ? lessons.map(l => renderLessonRow(l,'group')).join('')
+                : `<div class="empty-state"><span class="empty-icon">${icon('book')}</span><span>Пар нет</span></div>`}
+            </section>`;
+          }).join('')}
         </div>
       </div>`;
     }).join('');
@@ -829,7 +1031,7 @@ async function loadSchedule(group, faculty, subgroup = 'all', { silent = false }
     if (!silent) switchScreen(1);
     return true;
   } catch {
-    track.innerHTML = `<div class="day-column"><div class="glass-card"><div class="empty-state"><span class="empty-icon">⚠️</span><span>Ошибка загрузки</span></div></div></div>`;
+    track.innerHTML = `<div class="day-column"><div class="glass-card"><div class="empty-state"><span class="empty-icon">${icon('warning')}</span><span>Ошибка загрузки</span></div></div></div>`;
     return false;
   }
 }
@@ -843,7 +1045,7 @@ async function searchTeacher(){
   try {
     const data = await (await apiFetch(`${API}/teacher/${encodeURIComponent(name)}`)).json();
     if (!data.schedule || !Object.keys(data.schedule).length){
-      res.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">🔍</span><span>Не найден</span></div></div>`;
+      res.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">${icon('search')}</span><span>Не найден</span></div></div>`;
       return;
     }
     teacherCache = {};
@@ -861,14 +1063,14 @@ async function searchTeacher(){
       ${names.map(n => `<button class="action-btn secondary" onclick="renderTeacherSchedule('${n.replace(/'/g,"\\'")}')">${n}</button>`).join('')}
     </div>`;
   } catch {
-    res.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">⚠️</span><span>Ошибка</span></div></div>`;
+    res.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">${icon('warning')}</span><span>Ошибка</span></div></div>`;
   }
 }
 
 function renderTeacherSchedule(tName){
   const sched = teacherCache[tName];
   let html = `<div class="teacher-name">${tName}</div>
-    <button class="action-btn secondary" style="margin-bottom:20px;" onclick="searchTeacher()">⬅️ Назад</button>`;
+    <button class="action-btn secondary" style="margin-bottom:20px;" onclick="searchTeacher()">${icon('arrow', 'button-icon')}Назад</button>`;
   DAYS.forEach((day, i) => {
     if (!sched[day]) return;
     html += `<div class="glass-card teacher-result" style="animation-delay:${i * .08}s">
@@ -913,7 +1115,10 @@ async function loadSubgroups(faculty, group, preferredSubgroup = 'all', { silent
       data.subgroups.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     sel.value = data.subgroups.some(s => s.id === preferredSubgroup) ? preferredSubgroup : 'all';
     localStorage.setItem('vsu_subgroup', sel.value);
-    await loadSchedule(group, faculty, sel.value, {silent});
+    await loadSchedule(group, faculty, sel.value, {
+      silent,
+      subgroups: data.subgroups,
+    });
   } catch {
     sel.innerHTML = '<option>Ошибка</option>';
   }

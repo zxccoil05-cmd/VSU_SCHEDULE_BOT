@@ -2,6 +2,7 @@ import asyncio
 import logging
 import uvicorn
 import os
+import threading
 import dotenv
 import requests
 from fastapi import Depends, FastAPI, Header, HTTPException, Path as ApiPath, Query
@@ -39,6 +40,7 @@ WEBAPP_URL = os.getenv('WEBAPP_URL')
 factory = ScheduleFactory()
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
+SCHEDULE_REFRESH_INTERVAL_SECONDS = 15 * 60
 
 
 class TelegramAuthRequest(BaseModel):
@@ -46,35 +48,41 @@ class TelegramAuthRequest(BaseModel):
 
 # --- ФОНОВАЯ ЗАДАЧА ОБНОВЛЕНИЯ ---
 
-async def schedule_refresher():
-    """Фоновый цикл: обновляет данные каждые 6 часов"""
-    while True:
+def schedule_refresher(stop_event: threading.Event) -> None:
+    """Refresh schedules on a dedicated thread without blocking the API loop."""
+    while not stop_event.is_set():
         try:
-            print("🕒 Наступило время обновления данных...")
-            updated = await asyncio.to_thread(factory.update_all)
+            logger.info("Начинаю фоновое обновление расписаний.")
+            updated = factory.update_all()
             if updated:
-                print("✅ Расписание всех факультетов обновлено.")
+                logger.info("Расписание всех факультетов обновлено.")
             else:
                 logger.warning(
                     "Обновление расписания завершено частично; "
                     "для недоступных факультетов сохранены предыдущие данные."
                 )
-        except Exception as e:
-            print(f"❌ Ошибка при обновлении: {e}")
-        
-        # Спим 6 часов ПОСЛЕ успешного или ошибочного обновления
-        await asyncio.sleep(21600)
+        except Exception:
+            logger.exception("Ошибка фонового обновления расписания.")
+
+        if stop_event.wait(SCHEDULE_REFRESH_INTERVAL_SECONDS):
+            break
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Запускаем один единственный цикл, который сделает первое обновление СРАЗУ
-    refresher_task = asyncio.create_task(schedule_refresher())
-    print("🚀 Фоновый сервис обновлений запущен.")
-    
+    stop_event = threading.Event()
+    refresher_thread = threading.Thread(
+        target=schedule_refresher,
+        args=(stop_event,),
+        name="schedule-refresher",
+        daemon=True,
+    )
+    refresher_thread.start()
+    logger.info("Фоновый поток обновления расписаний запущен (интервал 15 минут).")
+
     yield
-    
-    # При выключении сервера отменяем задачу (хороший тон)
-    refresher_task.cancel()
+
+    stop_event.set()
+    refresher_thread.join(timeout=5)
 
 # --- ИНИЦИАЛИЗАЦИЯ APP ---
 
