@@ -385,6 +385,10 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
               </label>
               <select id="group-select"></select>
             </div>
+            <div class="select-bar" id="subgroup-area" style="display:none;">
+              <label class="field-label">ПОДГРУППА</label>
+              <select id="subgroup-select"></select>
+            </div>
             <button class="action-btn" onclick="switchScreen(1)">📅 Перейти в расписание</button>
           </div>
         </div>
@@ -798,11 +802,14 @@ function renderLessonRow(l, mode = 'group'){
 /* === ЗАГРУЗКА РАСПИСАНИЯ ===
  * silent=true — не переключать экран (используется при старте под лоадером).
  */
-async function loadSchedule(group, { silent = false } = {}){
+async function loadSchedule(group, faculty, subgroup = 'all', { silent = false } = {}){
   const track = $('schedule-track');
   track.innerHTML = `<div class="day-column"><div class="glass-card loading"></div></div>`;
   try {
-    const data = await (await apiFetch(`${API}/schedule/${encodeURIComponent(group)}`)).json();
+    const params = new URLSearchParams({faculty, subgroup});
+    const response = await apiFetch(`${API}/schedule/${encodeURIComponent(group)}?${params}`);
+    if (!response.ok) throw new Error(`Не удалось загрузить расписание: ${response.status}`);
+    const data = await response.json();
     track.innerHTML = DAYS.map(day => {
       const lessons = data.schedule?.[day] || [];
       return `<div class="day-column">
@@ -873,15 +880,43 @@ function renderTeacherSchedule(tName){
 }
 
 /* === ГРУППЫ === */
-async function loadGroups(fac){
+async function loadGroups(fac, preferredGroup = '', preferredSubgroup = 'all'){
   const sel = $('group-select');
   $('group-area').style.display = 'block';
+  $('subgroup-area').style.display = 'none';
   sel.innerHTML = '<option>...</option>';
   try {
-    const data = await (await apiFetch(`${API}/faculties/${encodeURIComponent(fac)}/groups`)).json();
+    const response = await apiFetch(`${API}/faculties/${encodeURIComponent(fac)}/groups`);
+    if (!response.ok) throw new Error(`Не удалось загрузить группы: ${response.status}`);
+    const data = await response.json();
     sel.innerHTML = '<option disabled selected>Выберите группу...</option>' +
       data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
+    if (data.groups.includes(preferredGroup)){
+      sel.value = preferredGroup;
+      await loadSubgroups(fac, preferredGroup, preferredSubgroup, {silent:true});
+    }
   } catch { sel.innerHTML = '<option>Ошибка</option>'; }
+}
+
+async function loadSubgroups(faculty, group, preferredSubgroup = 'all', { silent = false } = {}){
+  const area = $('subgroup-area');
+  const sel = $('subgroup-select');
+  area.style.display = 'block';
+  sel.innerHTML = '<option>...</option>';
+  try {
+    const response = await apiFetch(
+      `${API}/faculties/${encodeURIComponent(faculty)}/groups/${encodeURIComponent(group)}/subgroups`
+    );
+    if (!response.ok) throw new Error(`Не удалось загрузить подгруппы: ${response.status}`);
+    const data = await response.json();
+    sel.innerHTML = '<option value="all">Все подгруппы</option>' +
+      data.subgroups.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    sel.value = data.subgroups.some(s => s.id === preferredSubgroup) ? preferredSubgroup : 'all';
+    localStorage.setItem('vsu_subgroup', sel.value);
+    await loadSchedule(group, faculty, sel.value, {silent});
+  } catch {
+    sel.innerHTML = '<option>Ошибка</option>';
+  }
 }
 
 /* === ИНИЦИАЛИЗАЦИЯ === */
@@ -912,14 +947,12 @@ async function init(){
     fSel.innerHTML = '<option disabled selected>Выберите факультет...</option>' +
       data.faculties.map(f => `<option value="${f}">${f}</option>`).join('');
 
-    const sF = localStorage.getItem('vsu_fac'), sG = localStorage.getItem('vsu_group');
+    const sF = localStorage.getItem('vsu_fac');
+    const sG = localStorage.getItem('vsu_group');
+    const sS = localStorage.getItem('vsu_subgroup') || 'all';
     if (sF){
       fSel.value = sF;
-      await loadGroups(sF);
-      if (sG){
-        $('group-select').value = sG;
-        await loadSchedule(sG, { silent: true });
-      }
+      await loadGroups(sF, sG || '', sS);
     }
   } catch {
     fSel.innerHTML = '<option>Ошибка сети</option>';
@@ -956,9 +989,16 @@ async function init(){
 
 /* === СОБЫТИЯ === */
 $('fac-select').onchange = e => { localStorage.setItem('vsu_fac', e.target.value); loadGroups(e.target.value); };
-$('group-select').onchange = e => {
+$('group-select').onchange = async e => {
   localStorage.setItem('vsu_group', e.target.value);
-  loadSchedule(e.target.value); // переключает на экран расписания
+  localStorage.setItem('vsu_subgroup', 'all');
+  await loadSubgroups($('fac-select').value, e.target.value);
+};
+$('subgroup-select').onchange = e => {
+  const faculty = $('fac-select').value;
+  const group = $('group-select').value;
+  localStorage.setItem('vsu_subgroup', e.target.value);
+  loadSchedule(group, faculty, e.target.value);
 };
 
 const swiperBox = $('schedule-swiper');

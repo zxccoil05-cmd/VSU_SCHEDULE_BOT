@@ -3,7 +3,8 @@ import logging
 import uvicorn
 import os
 import dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, Path as ApiPath
+import requests
+from fastapi import Depends, FastAPI, Header, HTTPException, Path as ApiPath, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from aiogram import Bot, Dispatcher, types
@@ -50,8 +51,14 @@ async def schedule_refresher():
     while True:
         try:
             print("🕒 Наступило время обновления данных...")
-            await factory.update_all()
-            print("✅ Обновление завершено успешно.")
+            updated = await asyncio.to_thread(factory.update_all)
+            if updated:
+                print("✅ Расписание всех факультетов обновлено.")
+            else:
+                logger.warning(
+                    "Обновление расписания завершено частично; "
+                    "для недоступных факультетов сохранены предыдущие данные."
+                )
         except Exception as e:
             print(f"❌ Ошибка при обновлении: {e}")
         
@@ -227,17 +234,62 @@ def unblock_user(
 
 @app.get("/api/faculties")
 async def get_facs(user: dict = Depends(require_active_user)):
-    return {"faculties": list(factory.parsers.keys())}
+    return {"faculties": factory.get_faculties()}
 
 @app.get("/api/faculties/{fac}/groups")
 async def get_groups(fac: str, user: dict = Depends(require_active_user)):
-    parser = factory.parsers.get(fac)
-    if not parser: raise HTTPException(404)
-    return {"groups": parser.get_groups()}
+    try:
+        groups = await asyncio.to_thread(factory.get_groups, fac)
+    except (requests.RequestException, ValueError) as exc:
+        logger.exception("Не удалось загрузить группы факультета %s.", fac)
+        raise HTTPException(
+            503,
+            "Источник расписаний временно недоступен.",
+        ) from exc
+    if groups is None:
+        raise HTTPException(404, "Факультет не найден")
+    if not groups:
+        raise HTTPException(503, "Список групп ещё загружается")
+    return {"groups": groups}
+
+@app.get("/api/faculties/{fac}/groups/{group}/subgroups")
+async def get_subgroups(
+    fac: str,
+    group: str,
+    user: dict = Depends(require_active_user),
+):
+    try:
+        subgroups = await asyncio.to_thread(factory.get_subgroups, fac, group)
+    except (requests.RequestException, ValueError) as exc:
+        logger.exception("Не удалось загрузить подгруппы %s факультета %s.", group, fac)
+        raise HTTPException(
+            503,
+            "Источник расписаний временно недоступен.",
+        ) from exc
+    if subgroups is None:
+        raise HTTPException(404, "Группа не найдена")
+    return {"subgroups": subgroups}
 
 @app.get("/api/schedule/{group}")
-async def get_sched(group: str, user: dict = Depends(require_active_user)):
-    sched = factory.get_schedule(group)
+async def get_sched(
+    group: str,
+    faculty: str | None = None,
+    subgroup_id: str | None = Query(default=None, alias="subgroup"),
+    user: dict = Depends(require_active_user),
+):
+    try:
+        sched = await asyncio.to_thread(
+            factory.get_schedule,
+            group,
+            faculty,
+            None if subgroup_id in (None, "all") else subgroup_id,
+        )
+    except (requests.RequestException, ValueError) as exc:
+        logger.exception("Не удалось загрузить расписание группы %s.", group)
+        raise HTTPException(
+            503,
+            "Источник расписаний временно недоступен.",
+        ) from exc
     if not sched: raise HTTPException(404)
     return {"schedule": sched}
 
@@ -251,34 +303,30 @@ async def search_teacher(name: str, user: dict = Depends(require_active_user)):
     teacher_schedule = {}
     
     # Проходим по всем факультетам и их группам в памяти
-    for fac_name, parser in factory.parsers.items():
-        for group in parser.get_groups():
-            sched = factory.get_schedule(group)
-            if not sched: continue
-            
-            for day, lessons in sched.items():
-                for lesson in lessons:
-                    # Ищем совпадение в поле преподавателя
-                    current_teacher = lesson.get('teacher', '').lower()
-                    if query in current_teacher:
-                        if day not in teacher_schedule:
-                            teacher_schedule[day] = []
-                        
-                        # Создаем копию занятия для безопасного изменения
-                        lesson_info = lesson.copy()
-                        lesson_info['group'] = group
-                        
-                        # Проверяем на дубликаты (чтобы не дублировать потоковые лекции)
-                        duplicate = next((l for l in teacher_schedule[day] 
-                                        if l['time'] == lesson_info['time'] and 
-                                           l['name'] == lesson_info['name']), None)
-                        
-                        if duplicate:
-                            # Если такая пара уже есть, просто дописываем еще одну группу
-                            if group not in duplicate['group']:
-                                duplicate['group'] += f", {group}"
-                        else:
-                            teacher_schedule[day].append(lesson_info)
+    for group, sched in factory.iter_schedules():
+        for day, lessons in sched.items():
+            for lesson in lessons:
+                # Ищем совпадение в поле преподавателя
+                current_teacher = lesson.get('teacher', '').lower()
+                if query in current_teacher:
+                    if day not in teacher_schedule:
+                        teacher_schedule[day] = []
+
+                    # Создаем копию занятия для безопасного изменения
+                    lesson_info = lesson.copy()
+                    lesson_info['group'] = group
+
+                    # Проверяем на дубликаты (чтобы не дублировать потоковые лекции)
+                    duplicate = next((l for l in teacher_schedule[day]
+                                    if l['time'] == lesson_info['time'] and
+                                       l['name'] == lesson_info['name']), None)
+
+                    if duplicate:
+                        # Если такая пара уже есть, просто дописываем еще одну группу
+                        if group not in duplicate['group']:
+                            duplicate['group'] += f", {group}"
+                    else:
+                        teacher_schedule[day].append(lesson_info)
 
     # Сортировка по времени
     for day in teacher_schedule:

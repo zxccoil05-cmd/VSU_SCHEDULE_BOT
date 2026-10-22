@@ -1,76 +1,93 @@
-import asyncio
-import logging
+import requests
+from bs4 import BeautifulSoup
+import json
 
-# Выбери, какой парсер тестируем сейчас (просто раскомментируй нужный)
-from bot.faculties.ped import PedParser as TestParser
-# from bot.parsers.fspip_parser import FSPIPParser as TestParser
-# from bot.parsers.gf_parser import GFParser as TestParser
+# URL страницы электронного расписания ВГУ
+URL = "https://vsu.by/studentam/elektronnoe-raspisanie.html"
 
-# Настройка логирования, чтобы видеть процесс скачивания
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Referer": "https://vsu.by/studentam/elektronnoe-raspisanie.html",
+}
 
-async def run_test():
-    print("\n" + "="*60)
-    print(f"🧪 ТЕСТИРОВАНИЕ ПАРСЕРА: {TestParser.__name__}")
-    print("="*60 + "\n")
+def parse_vsu_schedule_structure():
+    # Используем сессию, чтобы сохранять куки и состояние между запросами
+    session = requests.Session()
+    session.headers.update(HEADERS)
 
-    parser = TestParser()
-
-    # 1. Проверяем фильтрацию ссылок
-    print("🔎 Шаг 1: Поиск и фильтрация ссылок на Excel...")
-    links = await parser._find_all_links()
-    
-    if not links:
-        print("❌ ОШИБКА: Ссылки не найдены! Проверь black_list или base_page_url.")
+    print("1. Получаем главную страницу расписания...")
+    response = session.get(URL)
+    if response.status_code != 200:
+        print(f"Ошибка загрузки: статус {response.status_code}")
         return
 
-    print(f"✅ Найдено подходящих файлов: {len(links)}")
-    for i, link in enumerate(links, 1):
-        print(f"   {i}. {link.split('/')[-1]}")
+    soup = BeautifulSoup(response.text, 'html.parser')
 
-    # 2. Запускаем парсинг данных
-    print("\n📥 Шаг 2: Скачивание и обработка файлов (это может занять время)...")
-    data = await parser.refresh()
-
-    if not data:
-        print("❌ ОШИБКА: Парсинг завершился с пустым результатом.")
+    # Ищем выпадающий список факультетов (<select>)
+    # Имя атрибута name может быть faculty_id или содержать слово faculty
+    faculty_select = soup.find('select', {'name': lambda x: x and 'faculty' in x.lower()})
+    
+    if not faculty_select:
+        print("Не удалось найти селект факультетов. Проверьте атрибуты name в HTML страницы.")
         return
 
-    # 3. Проверяем список групп
-    groups = parser.get_groups()
-    print(f"\n✅ Шаг 3: Группы успешно извлечены!")
-    print(f"📊 Всего найдено групп: {len(groups)}")
-    
-    # Выводим список групп колонками для удобства
-    for i in range(0, len(groups), 4):
-        print(" | ".join(f"{g:<15}" for g in groups[i:i+4]))
+    faculties = {}
+    for option in faculty_select.find_all('option'):
+        val = option.get('value')
+        text = option.text.strip()
+        if val and val != "0" and "выберите" not in text.lower():
+            faculties[text] = val
 
-    # 4. Проверяем содержимое конкретной группы (берем первую из списка)
-    if groups:
-        target = groups[0]
-        print(f"\n📅 Шаг 4: Проверка расписания для группы '{target}':")
-        schedule = parser.get_schedule(target)
+    print(f"Найдено факультетов: {len(faculties)}")
+
+    full_structure = {}
+
+    # 2. Обходим каждый факультет
+    for fac_name, fac_id in faculties.items():
+        print(f"-> Парсим факультет: {fac_name} (ID: {fac_id})")
         
-        if not schedule:
-            print(f"⚠️  Расписание для группы {target} пустое.")
-        else:
-            for day, lessons in schedule.items():
-                print(f"\n📍 {day}:")
-                if not lessons:
-                    print("   (нет занятий)")
-                for p in lessons:
-                    print(f"   [{p['time']}] {p['name']}")
-                    print(f"         🏛 {p['room']} | 👨‍🏫 {p['teacher']}")
+        full_structure[fac_name] = {
+            "faculty_id": fac_id,
+            "groups": {}
+        }
 
-    print("\n" + "="*60)
-    print("🎉 Тест завершен успешно!")
-    print("="*60)
+        # Имитируем отправку формы с выбранным факультетом
+        payload = {
+            "faculty_id": fac_id
+            # Если форма требует другие скрытые поля (например, csrf-токен Joomla), 
+            # их тоже нужно будет сюда добавить из HTML страницы.
+        }
+
+        # Отправляем POST-запрос на ту же страницу
+        res = session.post(URL, data=payload)
+        if res.status_code != 200:
+            print(f"   Ошибка при запросе факультета {fac_name}")
+            continue
+
+        fac_soup = BeautifulSoup(res.text, 'html.parser')
+
+        # Ищем селект групп на обновленной странице
+        group_select = fac_soup.find('select', {'name': lambda x: x and 'group' in x.lower()})
+        
+        if group_select:
+            for g_option in group_select.find_all('option'):
+                g_val = g_option.get('value')
+                g_text = g_option.text.strip()
+                if g_val and g_val != "0" and "выберите" not in g_text.lower():
+                    full_structure[fac_name]["groups"][g_text] = {
+                        "group_id": g_val,
+                        # Подгруппы и дни недели обычно зафиксированы в интерфейсе 
+                        # или появляются при выборе конкретной группы
+                        "subgroups": ["0", "1", "2"], # Стандартные подгруппы (0 - все, 1, 2)
+                        "days": ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"]
+                    }
+
+    # 3. Сохраняем результат в файл
+    output_filename = "vsu_structure.json"
+    with open(output_filename, "w", encoding="utf-8") as f:
+        json.dump(full_structure, f, ensure_ascii=False, indent=4)
+
+    print(f"\nГотово! Вся структура успешно сохранена в файл '{output_filename}'.")
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(run_test())
-    except KeyboardInterrupt:
-        pass
+    parse_vsu_schedule_structure()

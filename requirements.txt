@@ -1,5 +1,4 @@
 aiogram
-openpyxl
 requests
 beautifulsoup4
 aiohttp
