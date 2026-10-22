@@ -82,6 +82,11 @@ app.add_middleware(
 
 # --- API ЭНДПОИНТЫ ---
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
+
 @app.post("/api/auth")
 def authenticate_user(payload: TelegramAuthRequest):
     try:

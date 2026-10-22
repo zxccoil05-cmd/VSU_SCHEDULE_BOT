@@ -26,9 +26,18 @@ class PedParser:
         try:
             headers = {'User-Agent': 'Mozilla/5.0'}
             response = requests.get(self.base_page_url, headers=headers, timeout=15)
+            response.raise_for_status()
+            logger.info(
+                "Страница ПФ: HTTP %s, %s, %s байт",
+                response.status_code,
+                response.headers.get("Content-Type", "неизвестный Content-Type"),
+                len(response.content),
+            )
             response.encoding = 'utf-8'
             soup = BeautifulSoup(response.text, 'html.parser')
             links = soup.find_all('a', href=True)
+            excel_links = [link for link in links if ".xls" in link["href"].lower()]
+            logger.info("Страница ПФ: ссылок %s, Excel-ссылок %s", len(links), len(excel_links))
             
             found_urls = []
             # Стоп-слова: убираем заочку, зачеты и прочее
@@ -66,6 +75,7 @@ class PedParser:
             try:
                 logger.info(f"📥 Обработка файла ПФ: {url}")
                 response = requests.get(url, timeout=20)
+                response.raise_for_status()
                 wb = openpyxl.load_workbook(BytesIO(response.content), data_only=True)
                 sheet = wb.active
                 
