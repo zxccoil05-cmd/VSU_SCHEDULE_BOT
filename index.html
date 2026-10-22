@@ -232,17 +232,20 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .admin-user-action.unblock{background:linear-gradient(135deg,#10b981,#047857);}
 .admin-users-status{margin-top:10px;font-size:10px;font-weight:700;opacity:.7;}
 
-.themes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.themes-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;min-width:0;width:100%;}
+.theme-column{display:grid;align-content:start;gap:8px;min-width:0;}
+.theme-column-title{padding:0 3px 2px;font-size:10px;font-weight:800;letter-spacing:.5px;color:var(--text);opacity:.65;}
 .theme-option{
   display:flex;justify-content:space-between;align-items:center;gap:6px;
-  padding:14px 12px;border-radius:14px;
+  width:100%;min-width:0;padding:11px 9px;border-radius:14px;
   background:var(--card-bg);border:1px solid var(--border);color:var(--text);
   cursor:pointer;font-weight:700;font-size:11px;
   transition:transform .2s var(--ease-spring),border-color .2s,box-shadow .2s;
 }
 .theme-option:active{transform:scale(.96);}
 .theme-option.active-theme{border-color:var(--primary-solid);box-shadow:0 4px 14px rgba(0,0,0,.1);}
-.theme-option span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.theme-label{display:flex;align-items:center;gap:7px;min-width:0;}
+.theme-label-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .check{color:var(--primary);font-weight:900;font-size:16px;opacity:0;transform:scale(.4);transition:opacity .25s,transform .35s var(--ease-spring);flex-shrink:0;}
 .theme-option.active-theme .check{opacity:1;transform:scale(1);}
 
@@ -399,8 +402,9 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
 .modal-header h2{font-size:17px;}
 .modal-close{border-radius:13px;font-size:20px;}
 .themes-grid{gap:10px;}
-.theme-option{border-radius:16px;padding:13px;background:var(--card-bg);border-color:var(--border);}
-.theme-label{display:flex;align-items:center;gap:9px;min-width:0;}
+.theme-option{border-radius:16px;padding:11px 8px;background:var(--card-bg);border-color:var(--border);font-size:10px;}
+.theme-column-title{font-size:9px;letter-spacing:.35px;}
+.theme-label{gap:6px;}
 .theme-swatch{width:18px;height:18px;border-radius:7px;background:var(--swatch);box-shadow:0 2px 8px rgba(0,0,0,.12);flex:none;}
 .theme-option[data-theme="light"]{--swatch:linear-gradient(135deg,#5b5cf0,#9b6cff);}
 .theme-option[data-theme="dark"]{--swatch:linear-gradient(135deg,#111,#7658ed);}
@@ -633,10 +637,13 @@ function icon(name, className = 'icon'){
   return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 }
 const THEMES = [
-  ['light','Светлая'],['dark','Чёрная'],['aurora','Северное сияние'],['light-aurora','Северное сияние — светлая'],
-  ['sunset','Закат'],['dark-sunset','Закат — тёмная'],['forest','Лесная'],['dark-forest','Лесная — тёмная'],
-  ['red','Рубиновая'],['dark-red','Рубиновая — тёмная'],['neon','Неоновая'],['light-neon','Неоновая — светлая'],
-  ['pink','Розовая'],['dark-pink','Ночная роза']
+  {light:['light','Классика'],dark:['dark','Классика']},
+  {light:['light-aurora','Аврора'],dark:['aurora','Аврора']},
+  {light:['sunset','Закат'],dark:['dark-sunset','Закат']},
+  {light:['forest','Лес'],dark:['dark-forest','Лес']},
+  {light:['red','Рубин'],dark:['dark-red','Рубин']},
+  {light:['light-neon','Неон'],dark:['neon','Неон']},
+  {light:['pink','Роза'],dark:['dark-pink','Роза']}
 ];
 const NAV = [['home','Главная',0],['calendar','Расписание',1],['search','Поиск',2]];
 
@@ -894,8 +901,17 @@ function setupProfile(){
 
 /* === ГЕНЕРАЦИЯ UI === */
 function setupUI(){
-  $('themes-list').innerHTML = THEMES.map(([id,l]) =>
-    `<div class="theme-option" data-theme="${id}"><span class="theme-label"><span class="theme-swatch"></span>${l}</span><span class="check">${icon('check')}</span></div>`
+  $('themes-list').innerHTML = ['light','dark'].map(mode =>
+    `<div class="theme-column">
+      <div class="theme-column-title">${mode === 'light' ? 'Светлые темы' : 'Тёмные темы'}</div>
+      ${THEMES.map(theme => {
+        const [id, label] = theme[mode];
+        return `<div class="theme-option" data-theme="${id}">
+          <span class="theme-label"><span class="theme-swatch"></span><span class="theme-label-name">${label}</span></span>
+          <span class="check">${icon('check')}</span>
+        </div>`;
+      }).join('')}
+    </div>`
   ).join('');
   $$('.theme-option').forEach(o => o.onclick = () => setTheme(o.dataset.theme));
 
