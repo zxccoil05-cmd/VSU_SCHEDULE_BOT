@@ -58,6 +58,10 @@ class PedParser:
             unique_urls = list(set(found_urls))
             logger.info(f"🔎 Найдено файлов ПФ: {len(unique_urls)}")
             return unique_urls
+        except requests.HTTPError as e:
+            body = e.response.text[:1000] if e.response is not None else "(тело ответа отсутствует)"
+            logger.error("Ошибка поиска ссылок ПФ: %s; тело ответа: %r", e, body)
+            return []
         except Exception as e:
             logger.error(f"Ошибка поиска ссылок ПФ: {e}")
             return []

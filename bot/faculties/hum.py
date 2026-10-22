@@ -66,6 +66,10 @@ class HumParser:
                         found_urls.append(urljoin(self.base_page_url, l['href']))
 
             return list(set(found_urls))
+        except requests.HTTPError as e:
+            body = e.response.text[:1000] if e.response is not None else "(тело ответа отсутствует)"
+            logger.error("Ошибка поиска ссылок ГФ: %s; тело ответа: %r", e, body)
+            return []
         except Exception as e:
             logger.error(f"Ошибка поиска ссылок ГФ: {e}")
             return []

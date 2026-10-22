@@ -56,6 +56,10 @@ class FSPIPParser:
                             found_urls.append(full_url)
             
             return list(set(found_urls))
+        except requests.HTTPError as e:
+            body = e.response.text[:1000] if e.response is not None else "(тело ответа отсутствует)"
+            logger.error("Ошибка поиска ссылок ФСПиП: %s; тело ответа: %r", e, body)
+            return []
         except Exception as e:
             logger.error(f"Ошибка поиска ссылок ФСПиП: {e}")
             return []
