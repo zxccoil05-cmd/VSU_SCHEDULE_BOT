@@ -1,952 +1,977 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ВГУ Mobile</title>
-    
-    <style>
-    /* 1. СИСТЕМА ПЕРЕМЕННЫХ И ТЕМ */
-    
-    @import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=LINE+Seed+JP&display=swap');
-    :root {
-        --bg: #f1f5f9; 
-        --primary: #2563eb; 
-        --primary-solid: #2563eb;
-        --primary-grad: linear-gradient(135deg, #2563eb, #3b82f6);
-        --glass: rgba(226, 232, 240, 0.7); 
-        --glass-thick: rgba(241, 245, 249, 0.98);
-        --border: rgba(148, 163, 184, 0.3); 
-        --text: #0f172a;
-        --card-bg: #ffffff; 
-        --blob1: #3b82f6; 
-        --blob2: #93c5fd;
-        --vh: 1vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ВГУ Mobile</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@400;700;800&display=swap');
 
-    [data-theme="dark"] { 
-        --bg: #343434; --primary: #969696; --primary-solid: #9c9c9c; --primary-grad: linear-gradient(135deg, #6a6a6a, #7c7c7c);
-        --text: #f1f5f9; --card-bg: #3e3e3e; --blob1: #282828; --blob2: #363636; 
-        --glass: rgba(48, 48, 48, 0.7); --glass-thick: #141414; --border: rgba(88, 88, 88, 0.8); 
-    }
-    [data-theme="red"] { 
-        --bg: #450a0a; --primary: #ef4444; --primary-solid: #ef4444; --primary-grad: linear-gradient(135deg, #ef4444, #f87171);
-        --text: #fee2e2; --card-bg: #7f1d1d; --blob1: #991b1b; --blob2: #450a0a; 
-        --border: #991b1b; --glass: rgba(127, 29, 29, 0.6); --glass-thick: #450a0a; 
-    }
-    [data-theme="neon"] { 
-        --bg: #000000; --primary: #06b6d4; --primary-solid: #06b6d4; --primary-grad: linear-gradient(135deg, #06b6d4, #22d3ee);
-        --text: #cffafe; --card-bg: #083344; --blob1: #0e7490; --blob2: #000000; 
-        --border: #06b6d4; --glass: rgba(8, 145, 178, 0.2); --glass-thick: #000000; 
-    }
-    [data-theme="pink"] { 
-        --bg: #fdf2f8; --primary: #db2777; --primary-solid: #db2777; --primary-grad: linear-gradient(135deg, #db2777, #f472b6);
-        --text: #831843; --card-bg: #ffffff; --blob1: #f472b6; --blob2: #fbcfe8; 
-        --border: #f9a8d4; --glass: rgba(251, 207, 232, 0.6); --glass-thick: #fdf2f8; 
-    }
-    [data-theme="dark-pink"] { 
-        --bg: #1a0f1a;
-        --primary: #ff69b4;
-        --primary-solid: #ff69b4;
-        --primary-grad: linear-gradient(135deg, #ff69b4, #ff1493);
-        --text: #ffe4f2;
-        --card-bg: #2a1a2a;
-        --blob1: #ff1493;
-        --blob2: #ff69b4;
-        --glass: rgba(42, 26, 42, 0.7);
-        --border: #ff69b4;
-    }
-    [data-theme="gray"] { 
-        --bg: #1f2937; --primary: #9ca3af; --primary-solid: #9ca3af; --primary-grad: linear-gradient(135deg, #9ca3af, #d1d5db);
-        --text: #f9fafb; --card-bg: #374151; --blob1: #111827; --blob2: #4b5563; 
-        --border: #4b5563; --glass: rgba(55, 65, 81, 0.7); --glass-thick: #1f2937; 
-    }
-    [data-theme="yellow"] { 
-        --bg: #fffbeb; --primary: #d97706; --primary-solid: #d97706; --primary-grad: linear-gradient(135deg, #d97706, #fbbf24);
-        --text: #78350f; --card-bg: #ffffff; --blob1: #fbbf24; --blob2: #fef3c7; 
-        --border: #fcd34d; --glass: rgba(254, 243, 199, 0.7); --glass-thick: #fffbeb; 
-    }
-    [data-theme="forest"] { 
-        --bg: #064e3b; --primary: #10b981; --primary-solid: #10b981; --primary-grad: linear-gradient(135deg, #10b981, #34d399);
-        --text: #ecfdf5; --card-bg: #065f46; --blob1: #064e3b; --blob2: #065f46; 
-        --border: rgba(20, 184, 166, 0.3); --glass: rgba(6, 78, 59, 0.7); --glass-thick: #022c22; 
-    }
+/* === ПЕРЕМЕННЫЕ И ТЕМЫ === */
+:root{
+  --ease:cubic-bezier(.16,1,.3,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --bg:#f1f5f9;--primary:#2563eb;--primary-solid:#2563eb;
+  --primary-grad:linear-gradient(135deg,#2563eb,#3b82f6);
+  --glass:rgba(226,232,240,.7);--border:rgba(148,163,184,.3);
+  --text:#0f172a;--card-bg:#fff;--blob1:#3b82f6;--blob2:#93c5fd;
+}
+[data-theme="dark"]{--bg:#343434;--primary:#969696;--primary-solid:#9c9c9c;--primary-grad:linear-gradient(135deg,#6a6a6a,#7c7c7c);--text:#f1f5f9;--card-bg:#3e3e3e;--blob1:#282828;--blob2:#363636;--glass:rgba(48,48,48,.7);--border:rgba(88,88,88,.8);}
+[data-theme="red"]{--bg:#450a0a;--primary:#ef4444;--primary-solid:#ef4444;--primary-grad:linear-gradient(135deg,#ef4444,#f87171);--text:#fee2e2;--card-bg:#7f1d1d;--blob1:#991b1b;--blob2:#450a0a;--border:#991b1b;--glass:rgba(127,29,29,.6);}
+[data-theme="neon"]{--bg:#000;--primary:#06b6d4;--primary-solid:#06b6d4;--primary-grad:linear-gradient(135deg,#06b6d4,#22d3ee);--text:#cffafe;--card-bg:#083344;--blob1:#0e7490;--blob2:#000;--border:#06b6d4;--glass:rgba(8,145,178,.2);}
+[data-theme="pink"]{--bg:#fdf2f8;--primary:#db2777;--primary-solid:#db2777;--primary-grad:linear-gradient(135deg,#db2777,#f472b6);--text:#831843;--card-bg:#fff;--blob1:#f472b6;--blob2:#fbcfe8;--border:#f9a8d4;--glass:rgba(251,207,232,.6);}
+[data-theme="dark-pink"]{--bg:#1a0f1a;--primary:#ff69b4;--primary-solid:#ff69b4;--primary-grad:linear-gradient(135deg,#ff69b4,#ff1493);--text:#ffe4f2;--card-bg:#2a1a2a;--blob1:#ff1493;--blob2:#ff69b4;--glass:rgba(42,26,42,.7);--border:#ff69b4;}
+[data-theme="forest"]{--bg:#064e3b;--primary:#10b981;--primary-solid:#10b981;--primary-grad:linear-gradient(135deg,#10b981,#34d399);--text:#ecfdf5;--card-bg:#065f46;--blob1:#064e3b;--blob2:#065f46;--border:rgba(20,184,166,.3);--glass:rgba(6,78,59,.7);}
 
-    /* 2. БАЗОВЫЕ СТИЛИ */
-    * { 
-        box-sizing: border-box; 
-        -webkit-tap-highlight-color: transparent; 
-        outline: none;
-        font-family: "Balsamiq Sans", sans-serif;
-        font-weight: 700;
-        font-style: normal;
-    }
+/* === БАЗА === */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;font-family:'LINE Seed JP',sans-serif;}
+body{font-weight:700;margin:0;padding:0;background:var(--bg);color:var(--text);height:100vh;height:100dvh;width:100vw;overflow:hidden;transition:background .4s var(--ease),color .4s var(--ease);}
 
-    body {
-        font-family: 'LINE Seed JP', sans-serif;
-        font-weight: 700;
-        margin: 0; 
-        padding: 0;
-        background: var(--bg); 
-        color: var(--text);
-        height: 100vh;
-        width: 100vw; 
-        overflow: hidden;
-        transition: background 0.4s ease, color 0.4s ease;
-    }
+/* === ФОН === */
+.background-blobs{position:fixed;inset:0;z-index:-1;overflow:hidden;isolation:isolate;}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.4;transition:background .8s var(--ease);}
+.blob-1{width:400px;height:400px;background:var(--blob1);top:-100px;left:-100px;}
+.blob-2{width:300px;height:300px;background:var(--blob2);bottom:-50px;right:-50px;}
 
-    /* ФОНОВЫЕ ПЯТНА */
-    .background-blobs { 
-        position: fixed; 
-        inset: 0; 
-        z-index: -1; 
-        overflow: hidden; 
-        isolation: isolate;
-        background: var(--bg); 
-    }
-    .blob { 
-        position: absolute; 
-        border-radius: 50%; 
-        filter: blur(60px); 
-        opacity: 0.4; 
-        transition: background 0.8s ease; 
-    }
-    .blob-1 { 
-        width: 400px; 
-        height: 400px; 
-        background: var(--blob1); 
-        top: -100px; 
-        left: -100px; 
-    }
-    .blob-2 { 
-        width: 300px; 
-        height: 300px; 
-        background: var(--blob2); 
-        bottom: -50px; 
-        right: -50px; 
-    }
+/* === КОНТЕЙНЕР ЭКРАНОВ (3 экрана) === */
+.app-viewport{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+.screens-container{display:flex;width:300%;height:100%;transition:transform .55s var(--ease);}
+.screen{width:33.3333%;height:100%;overflow-y:auto;padding:0 20px;-webkit-overflow-scrolling:touch;}
 
-    .app-viewport { 
-        width: 100%; 
-        height: 100%; 
-        display: flex; 
-        flex-direction: column; 
-        overflow: hidden;
-    }
+/* === ЛОГО + КОРОНА === */
+.header{padding:20px 0 0;width:100%;}
+.container{max-width:1200px;margin:0 auto;padding:0 20px;position:relative;}
+.logo{display:flex;justify-content:center;align-items:center;gap:12px;}
+.logo-img{width:47px;height:47px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.logo-text{font-size:24px;font-weight:800;background:var(--primary-grad);background-clip:text;-webkit-background-clip:text;color:transparent;text-transform:uppercase;letter-spacing:2px;text-shadow:2px 2px 4px rgba(0,0,0,.2);}
 
-    .theme-header {
-        display: flex;
-        align-items: center;
-        padding: 20px;
-        gap: 20px;
-        background: var(--glass);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--border); 
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        border-radius: 20px;
-    }
+/* === КОРОНА === */
+.crown{
+  display:inline-block;
+  font-size:1em;
+  filter:drop-shadow(0 2px 6px rgba(255,200,0,.55));
+  animation:crownFloat 2.4s ease-in-out infinite;
+  transform-origin:center;
+  line-height:1;
+  will-change:transform;
+}
+@keyframes crownFloat{
+  0%,100%{transform:translateY(0) rotate(-8deg) scale(1);}
+  50%{transform:translateY(-3px) rotate(8deg) scale(1.08);}
+}
 
-    .back-btn {
-        background: none;
-        border: none;
-        font-size: 28px;
-        color: var(--text);
-        cursor: pointer;
-        padding: 0 10px;
-    }
+/* === ПРОФИЛЬ === */
+.profile-card{
+  position:relative;
+  background:var(--glass);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:24px;
+  padding:20px;margin-top:20px;
+  display:flex;align-items:center;gap:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.05);
+  animation:cardIn .5s var(--ease) both;
+  overflow:hidden;
+}
+.profile-card::before{
+  content:'';position:absolute;inset:-40% -40% auto auto;width:160px;height:160px;border-radius:50%;
+  background:var(--primary-grad);opacity:.12;pointer-events:none;
+}
+.profile-avatar{
+  position:relative;flex-shrink:0;
+  width:70px;height:70px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:800;color:#fff;
+  background:var(--primary-grad);
+  box-shadow:0 6px 20px rgba(0,0,0,.18);
+  overflow:hidden;
+  border:3px solid var(--glass);
+}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+.profile-info{flex:1;min-width:0;}
+.profile-greeting{font-size:11px;opacity:.65;font-weight:700;margin-bottom:4px;letter-spacing:.3px;}
+.profile-name{
+  font-size:20px;font-weight:800;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.profile-name .crown{font-size:20px;}
 
-    .theme-option {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px;
-        border-bottom: 1px solid var(--border);
-        cursor: pointer;
-        font-weight: 600;
-    }
+.settings-btn{
+  position:absolute;top:8px;right:8px;
+  width:38px;height:38px;border-radius:50%;
+  background:var(--card-bg);border:1px solid var(--border);
+  color:var(--text);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .25s var(--ease-spring),background .2s;
+  z-index:2;
+}
+.settings-btn:active{transform:scale(.85) rotate(-30deg);}
 
-    .theme-option:last-child {
-        border-bottom: none;
-    }
+/* === КАРТОЧКИ === */
+.glass-card{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:24px;padding:20px;margin-bottom:15px;box-shadow:0 8px 32px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:15px;animation:cardIn .45s var(--ease) both;transition:transform .25s var(--ease),box-shadow .25s var(--ease);}
+@media (hover:hover){
+  .glass-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.1);}
+  .action-btn:hover{filter:brightness(1.08);}
+}
+.glass-card.loading{justify-content:center;align-items:center;flex-direction:row;padding:60px;min-height:120px;}
+.loading::after{content:'';width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary-solid);border-radius:50%;animation:spin .8s linear infinite;}
 
-    .check {
-        color: var(--primary);
-        font-weight: 900;
-        font-size: 20px;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-    }
+.empty-state{display:flex;flex-direction:column;align-items:center;gap:10px;padding:50px 20px;opacity:.55;font-size:12px;font-weight:600;}
+.empty-icon{font-size:32px;opacity:.7;}
 
-    .theme-option.active-theme .check {
-        opacity: 1;
-    }
+/* === ФОРМЫ === */
+.select-bar{display:flex;flex-direction:column;gap:10px;}
+.field-label{font-weight:800;font-size:11px;letter-spacing:.5px;background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;color:transparent;display:flex;align-items:center;gap:6px;}
+.field-label .crown{font-size:14px;}
+select,.search-input{width:100%;padding:16px;border-radius:16px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-weight:700;font-size:14px;appearance:none;transition:border-color .2s var(--ease);}
+select:focus,.search-input:focus{border-color:var(--primary-solid);}
 
-    /* ЛОГОТИП */
-    .header {
-        padding: 20px 0;
-        width: 100%;
-    }
+/* === КНОПКИ === */
+.action-btn{width:100%;margin-top:12px;padding:16px;border-radius:16px;background:var(--primary-grad);color:#fff;border:none;font-weight:800;font-size:12px;cursor:pointer;transition:transform .15s var(--ease),filter .2s,box-shadow .2s;font-family:inherit;}
+.action-btn:active{transform:scale(.97);}
+.action-btn.secondary{background:var(--card-bg);color:var(--text);border:1px solid var(--primary-solid);}
+.btn-danger{background:#ef4444 !important;}
 
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
+/* === ДНИ === */
+.days-tabs{display:flex;gap:6px;position:sticky;top:0;z-index:100;padding:10px;margin:10px 0;background:var(--glass);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);border-radius:20px;border:1px solid var(--border);height:60px;}
+.day-tab{flex:1;text-align:center;padding:10px 0;border-radius:12px;background:transparent;border:none;color:var(--text);opacity:.6;font-size:9px;font-weight:800;cursor:pointer;transition:background .3s var(--ease),color .3s,opacity .3s,transform .3s var(--ease-spring),box-shadow .3s;}
+.day-tab.active{background:var(--primary-grad);color:#fff;opacity:1;transform:translateY(-2px) scale(1.02);box-shadow:0 6px 16px rgba(0,0,0,.2);}
 
-    .logo {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 15px;
-    }
+/* === РАСПИСАНИЕ === */
+#schedule-swiper{overflow:hidden;width:100%;padding-bottom:100px;}
+.swiper-track{display:flex;width:600%;transition:transform .5s var(--ease);}
+.day-column{width:16.666%;padding:10px 5px 0;min-height:100%;}
+.day-title{font-weight:900;color:var(--primary-solid);border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:15px;font-size:12px;}
 
-    .logo-img {
-        width: 47px;
-        height: 47px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
+.lesson-row{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--border);transition:background .3s var(--ease);}
+.lesson-row:last-child{border-bottom:none;}
+.time-block{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:60px;}
+.time-start{font-size:17px;background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900;}
+.time-end{font-size:9px;font-weight:700;color:var(--text);opacity:.5;}
+.lesson-type{font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;padding:4px 10px;border-radius:8px;display:inline-block;margin-bottom:8px;background:var(--card-bg);color:var(--primary-solid);border:1px solid var(--primary-solid);}
+.lesson-title{font-weight:800;font-size:13px;color:var(--text);margin-bottom:4px;line-height:1.2;}
+.lesson-meta{display:flex;gap:10px;opacity:.7;font-size:10px;font-weight:600;}
+.teacher-name{text-align:center;font-weight:900;margin-bottom:15px;color:var(--primary-solid);font-size:16px;}
 
-    .logo-text {
-        font-size: 28px;
-        font-weight: 700;
-        background: var(--primary-grad);
-        background-clip: text;
-        color: transparent;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    }
+/* === НИЖНЯЯ НАВИГАЦИЯ === */
+.bottom-nav{position:fixed;bottom:20px;left:20px;right:20px;height:75px;background:var(--primary-grad);border:1px solid var(--primary-solid);display:flex;justify-content:space-around;border-radius:24px;z-index:1000;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.15);transition:background .4s var(--ease),opacity .3s var(--ease),transform .3s var(--ease);padding:0 10px;}
+.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;flex:1;color:rgba(255,255,255,.6);cursor:pointer;position:relative;}
+.nav-item:not(:last-child)::after{content:'';position:absolute;right:0;top:5%;height:90%;width:1px;background:rgba(255,255,255,.3);pointer-events:none;}
+.nav-item span{transition:transform .3s var(--ease-spring);}
+.nav-item span:first-child{font-size:20px;}
+.nav-item span:last-child{font-size:9px;font-weight:700;margin-top:2px;}
+.nav-item.active{color:#fff;}
+.nav-item.active span{transform:scale(1.12);}
 
-    /* КОНТЕЙНЕР ЭКРАНОВ */
-    .screens-container { 
-        display: flex; 
-        width: 400%; 
-        height: 100%;
-        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
-        margin-top: 0;
-    }
+/* === ПРОЧЕЕ === */
+.content-scroll{flex:1;overflow-y:auto;padding-bottom:100px;}
+.teacher-result{animation:cardIn .45s var(--ease) both;}
 
-    .screen { 
-        width: 25%; 
-        height: 100%; 
-        overflow-y: auto; 
-        padding: 0 20px; 
-        -webkit-overflow-scrolling: touch;
-    }
+/* === МОДАЛКА НАСТРОЕК (bottom sheet) === */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0);
+  backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);
+  pointer-events:none;
+  transition:background .35s var(--ease),backdrop-filter .35s var(--ease);
+}
+.modal-overlay.open{background:rgba(0,0,0,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;}
+.modal-sheet{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--bg);
+  border-radius:28px 28px 0 0;
+  max-height:85vh;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .45s var(--ease);
+  box-shadow:0 -10px 40px rgba(0,0,0,.25);
+  border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom,0);
+  will-change:transform;
+}
+.modal-overlay.open .modal-sheet{transform:translateY(0);}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px 16px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--bg);border-radius:28px 28px 0 0;z-index:1;
+}
+.modal-header::before{
+  content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  width:44px;height:4px;border-radius:4px;background:var(--border);
+}
+.modal-header h2{margin:0;font-size:16px;font-weight:800;color:var(--text);}
+.modal-close{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--card-bg);border:1px solid var(--border);
+  color:var(--text);font-size:22px;font-weight:800;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:transform .25s var(--ease-spring);
+}
+.modal-close:active{transform:scale(.85) rotate(90deg);}
+.modal-body{padding:16px 24px 30px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.settings-section{margin-bottom:22px;}
+.settings-section .field-label{margin-bottom:10px;display:flex;align-items:center;gap:6px;font-size:10px;}
+.admin-users-list{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.admin-user-card{padding:13px 15px;border:1px solid var(--border);border-radius:16px;background:var(--card-bg);overflow-wrap:anywhere;}
+.admin-user-name{font-size:12px;font-weight:800;color:var(--text);}
+.admin-user-meta{margin-top:5px;font-size:9px;font-weight:600;line-height:1.6;opacity:.62;}
+.admin-user-actions{display:flex;gap:8px;margin-top:10px;}
+.admin-user-action{flex:1;padding:9px 10px;border:0;border-radius:11px;color:#fff;font:inherit;font-size:9px;font-weight:800;cursor:pointer;}
+.admin-user-action:disabled{opacity:.55;cursor:wait;}
+.admin-user-action.block{background:linear-gradient(135deg,#ef4444,#b91c1c);}
+.admin-user-action.unblock{background:linear-gradient(135deg,#10b981,#047857);}
+.admin-users-status{margin-top:10px;font-size:10px;font-weight:700;opacity:.7;}
 
-    /* КАРТОЧКИ И ПОЛЯ */
-    .glass-card {
-        background: var(--glass); 
-        backdrop-filter: blur(20px); 
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--border); 
-        border-radius: 24px;
-        padding: 20px; 
-        margin-bottom: 15px; 
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        animation: fadeInUp 0.3s ease forwards;
-    }
+.themes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.theme-option{
+  display:flex;justify-content:space-between;align-items:center;gap:6px;
+  padding:14px 12px;border-radius:14px;
+  background:var(--card-bg);border:1px solid var(--border);
+  cursor:pointer;font-weight:700;font-size:11px;
+  transition:transform .2s var(--ease-spring),border-color .2s,box-shadow .2s;
+}
+.theme-option:active{transform:scale(.96);}
+.theme-option.active-theme{border-color:var(--primary-solid);box-shadow:0 4px 14px rgba(0,0,0,.1);}
+.theme-option span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.check{color:var(--primary);font-weight:900;font-size:16px;opacity:0;transform:scale(.4);transition:opacity .25s,transform .35s var(--ease-spring);flex-shrink:0;}
+.theme-option.active-theme .check{opacity:1;transform:scale(1);}
 
-    .select-bar {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
+.settings-info{
+  text-align:center;font-size:9px;opacity:.5;
+  padding:12px 0 0;line-height:1.6;
+}
+.settings-info strong{color:var(--primary-solid);}
 
-    .field-label {
-        font-weight: 700;
-        color: var(--primary-grad);
-    }
+/* === ЭКРАН ЗАГРУЗКИ === */
+#loader{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:32px;background:var(--bg);
+  transition:opacity .6s var(--ease),visibility .6s;
+  will-change:opacity;
+}
+#loader::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%, var(--blob1) 0%, transparent 60%);
+  opacity:.15;pointer-events:none;
+  animation:bgPulse 3s ease-in-out infinite;
+}
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
 
-    select, .search-input {
-        width: 100%; 
-        padding: 16px; 
-        border-radius: 16px; 
-        border: 1px solid var(--border); 
-        background: var(--card-bg); 
-        color: var(--text); 
-        font-weight: 700; 
-        font-family: inherit; 
-        font-size: 16px;
-        margin-top: 10px; 
-        appearance: none;
-    }
+.loader-logo{position:relative;width:110px;height:110px;display:flex;align-items:center;justify-content:center;}
+.loader-ring{position:absolute;inset:0;border-radius:50%;border:3px solid transparent;border-top-color:var(--primary-solid);animation:spin 1s linear infinite;}
+.loader-ring:nth-child(2){inset:10px;border-top-color:transparent;border-right-color:var(--primary-solid);animation-duration:1.4s;animation-direction:reverse;opacity:.65;}
+.loader-ring:nth-child(3){inset:20px;border-top-color:transparent;border-left-color:var(--primary-solid);animation-duration:1.8s;opacity:.35;}
+.loader-icon{font-size:36px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.15));animation:pulse 1.6s ease-in-out infinite;}
+.loader-title{font-size:24px;font-weight:800;letter-spacing:4px;text-transform:uppercase;background:var(--primary-grad);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 2.2s linear infinite;}
+.loader-subtitle{font-size:10px;opacity:.55;letter-spacing:2px;font-weight:700;text-transform:uppercase;margin-top:-18px;}
+.loader-bar{width:220px;height:4px;border-radius:4px;background:var(--border);overflow:hidden;position:relative;}
+.loader-bar::after{content:'';position:absolute;left:0;top:0;height:100%;width:40%;border-radius:4px;background:var(--primary-grad);animation:progress 1.5s ease-in-out infinite;}
 
-    .action-btn {
-        width: 100%; 
-        margin-top: 12px; 
-        padding: 16px; 
-        border-radius: 16px;
-        background: var(--primary-grad); 
-        color: white; 
-        border: none; 
-        font-weight: 800;
-        font-size: 14px; 
-        cursor: pointer; 
-        transition: 0.2s; 
-        font-family: inherit;
-    }
-    .btn-danger { 
-        background: #ef4444 !important; 
-    }
+[hidden]{display:none !important;}
+.access-screen{
+  position:fixed;inset:0;z-index:10000;display:grid;place-items:center;
+  padding:24px;overflow:hidden;background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 35%,rgba(239,68,68,.22),transparent 62%);
+}
+.access-card{
+  width:min(100%,340px);padding:26px 22px;text-align:center;
+  background:var(--card-bg);border:1px solid rgba(239,68,68,.28);border-radius:26px;
+  box-shadow:0 24px 80px rgba(15,23,42,.2);animation:cardIn .55s var(--ease) both;
+}
+.access-emblem{
+  width:84px;height:84px;margin:0 auto 18px;border-radius:26px;
+  display:grid;place-items:center;font-size:40px;
+  color:#fff;background:linear-gradient(145deg,#ef4444,#991b1b);
+  box-shadow:0 12px 34px rgba(220,38,38,.35);
+  animation:accessPulse 2.4s ease-in-out infinite;
+}
+.access-eyebrow{margin:0 0 8px;color:#ef4444;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;}
+.access-title{margin:0 0 12px;color:var(--text);font-size:25px;font-weight:800;line-height:1.2;}
+.access-message{margin:0;color:var(--text);opacity:.68;font-size:12px;font-weight:600;line-height:1.7;}
+.access-note{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--border);font-size:10px;line-height:1.6;opacity:.55;}
+.access-link{display:inline-block;margin-top:16px;color:#ef4444;font-size:12px;font-weight:800;text-decoration:none;}
+.access-retry{margin-top:20px;}
+.cat-particles{position:fixed;inset:0;overflow:hidden;pointer-events:none;}
+.cat-particle{
+  position:absolute;left:var(--origin-x);top:var(--origin-y);
+  width:var(--size);height:var(--size);object-fit:cover;border-radius:24%;
+  border:3px solid rgba(255,255,255,.88);
+  box-shadow:0 8px 24px rgba(15,23,42,.28);
+  animation:catFly var(--duration) cubic-bezier(.16,.7,.25,1) both;
+}
+@keyframes catFly{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0);}
+  12%{opacity:1;}
+  78%{opacity:.95;}
+  100%{opacity:0;transform:translate(calc(-50% + var(--travel-x)),calc(-50% + var(--travel-y))) scale(.85) rotate(var(--rotation));}
+}
+@keyframes accessPulse{0%,100%{transform:translateY(0) rotate(-3deg);box-shadow:0 12px 34px rgba(220,38,38,.3);}50%{transform:translateY(-5px) rotate(3deg);box-shadow:0 18px 42px rgba(220,38,38,.48);}}
+@media (prefers-reduced-motion:reduce){.access-emblem,.cat-particle{animation:none;}.cat-particle{display:none;}}
 
-    .double-button-field {
-        display: flex;
-        width: 100%;
-        gap: 15px;
-    }
-
-    .contact-button {
-        flex: 1;
-    }
-
-    /* ШАПКА РАСПИСАНИЯ */
-    .days-tabs { 
-        display: flex; 
-        gap: 6px; 
-        position: sticky; 
-        top: 0; 
-        z-index: 100;
-        padding: 10px; 
-        margin: 10px 0;
-        background: var(--glass); 
-        backdrop-filter: blur(15px); 
-        -webkit-backdrop-filter: blur(15px);
-        border-radius: 20px; 
-        border: 1px solid var(--border);
-        height: 60px;
-    }
-    .day-tab {
-        flex: 1; 
-        text-align: center; 
-        padding: 10px 0; 
-        border-radius: 12px;
-        background: transparent; 
-        border: none; 
-        color: var(--text); 
-        opacity: 0.6;
-        font-size: 11px; 
-        font-weight: 800; 
-        transition: all 0.3s ease;
-    }
-    .day-tab.active { 
-        background: var(--primary-grad); 
-        color: white; 
-        opacity: 1;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    /* РАСПИСАНИЕ (SWIPER) */
-    #schedule-swiper { 
-        flex: 1; 
-        overflow: hidden; 
-        width: 100%; 
-        margin-top: 0; 
-        padding-bottom: 100px;
-    }
-    .swiper-track { 
-        display: flex; 
-        width: 600%; 
-        transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1); 
-    }
-    .day-column { 
-        width: 16.666%; 
-        height: auto; 
-        min-height: 100%;
-        padding: 10px 5px 0px 5px; 
-        -webkit-overflow-scrolling: touch; 
-        scroll-behavior: smooth;
-    }
-    .day-column::-webkit-scrollbar { 
-        width: 0; 
-    }
-
-    /* ПАРЫ */
-    .lesson-row { 
-        display: flex; 
-        gap: 16px; 
-        padding: 18px 0; 
-        border-bottom: 1px solid var(--border); 
-        transition: background 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
-        opacity: 1;
-    }
-    .lesson-row:last-child { 
-        border-bottom: none; 
-    }
-
-    .time-block { 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        justify-content: center; 
-        min-width: 60px; 
-    }
-    .time-start { 
-        font-size: 19px; 
-        background: var(--primary-grad); 
-        -webkit-background-clip: text; 
-        -webkit-text-fill-color: transparent;  
-        font-weight: 900; 
-    }
-    .time-end { 
-        font-size: 11px; 
-        font-weight: 700; 
-        color: var(--text); 
-        opacity: 0.5;
-    }
-
-    .lesson-type { 
-        font-size: 10px; 
-        font-weight: 900; 
-        text-transform: uppercase; 
-        letter-spacing: 0.8px; 
-        padding: 4px 10px; 
-        border-radius: 8px;
-        display: inline-block; 
-        margin-bottom: 8px;
-        background: var(--card-bg); 
-        color: var(--primary-grad);
-        border: 1px solid var(--primary-solid);
-    }
-    .lesson-name { 
-        font-weight: 800; 
-        font-size: 15px; 
-        color: var(--text); 
-        margin-bottom: 4px; 
-        display: block; 
-    }
-
-    /* НИЖНЯЯ НАВИГАЦИЯ */
-/* НИЖНЯЯ НАВИГАЦИЯ */
-    .bottom-nav {
-        position: fixed; 
-        bottom: 20px; 
-        left: 20px;
-        right: 20px;
-        width: auto;
-        height: 75px;
-        background: var(--primary-grad);
-        border: 1px solid var(--primary-solid);
-        display: flex;
-        justify-content: space-around;
-        border-radius: 24px;
-        z-index: 1000;
-        align-items: center;
-        gap: 0; /* убираем gap, используем padding */
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        transition: background 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
-        opacity: 1;
-        transform: translateY(0);
-        padding: 0 10px;
-    }
-
-    .bottom-nav.hidden {
-        opacity: 0;
-        transform: translateY(20px);
-        pointer-events: none;
-    }
-
-    .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        flex: 1;
-        color: rgba(255,255,255,0.6);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    /* Разделители */
-    .nav-item:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 5%;
-        height: 90%;
-        width: 1px;
-        background: rgba(255, 255, 255, 0.3);
-        transform: none !important;
-        transition: none !important;
-        pointer-events: none;
-    }
-
-    /* Активный пункт - меняем только цвет и размер текста/иконки */
-    .nav-item.active {
-        color: white;
-    }
-
-    .nav-item.active span:first-child {
-        transform: scale(1.05);
-        transition: transform 0.3s ease;
-    }
-
-    .nav-item.active span:last-child {
-        transform: scale(1.05);
-        transition: transform 0.3s ease;
-    }
-
-    .nav-item span:first-child {
-        font-size: 20px;
-        transition: transform 0.3s ease;
-    }
-
-    .nav-item span:last-child {
-        font-size: 11px;
-        font-weight: 700;
-        margin-top: 2px;
-        transition: transform 0.3s ease;
-    }
-
-    /* СКРОЛЛ КОНТЕНТА */
-    .content-scroll { 
-        flex: 1; 
-        overflow-y: auto; 
-        padding-bottom: 100px; 
-    }
-
-    /* Анимация появления */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .teacher-result {
-        animation: fadeInUp 0.3s ease forwards;
-    }
-    </style>
+@keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+@keyframes shimmer{to{background-position:200% center;}}
+@keyframes progress{0%{transform:translateX(-100%);}100%{transform:translateX(300%);}}
+@keyframes bgPulse{0%,100%{transform:scale(1);opacity:.15;}50%{transform:scale(1.3);opacity:.25;}}
+</style>
 </head>
 <body>
-    <div class="background-blobs">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
+
+<!-- ЭКРАН ЗАГРУЗКИ -->
+<div id="loader">
+  <div class="loader-logo">
+    <div class="loader-ring"></div>
+    <div class="loader-ring"></div>
+    <div class="loader-ring"></div>
+    <div class="loader-icon">📚</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+    <div class="loader-title">ВГУ MOBILE</div>
+    <div class="loader-subtitle">Загрузка</div>
+    <div class="loader-bar"></div>
+  </div>
+</div>
+
+<div class="background-blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+</div>
+
+<div class="app-viewport">
+  <div class="screens-container" id="screens-container">
+
+    <!-- Экран 0: Главная / Профиль -->
+    <div class="screen" id="main-screen">
+      <header class="header">
+        <div class="container">
+          <div class="logo">
+            <img src="img/logo.png" class="logo-img" alt="logo">
+            <span class="logo-text">ВГУ Mobile</span>
+            <span class="crown" id="logo-crown" style="display:none;">👑</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-scroll">
+        <!-- Профиль -->
+        <div class="profile-card" style="margin-top:20px;">
+          <button class="settings-btn" onclick="openSettings()" aria-label="Настройки">⚙️</button>
+          <div class="profile-avatar" id="profile-avatar">?</div>
+          <div class="profile-info">
+            <div class="profile-greeting" id="profile-greeting">Добрый день</div>
+            <div class="profile-name">
+              <span id="profile-name-text">Гость</span>
+              <span class="crown" id="profile-crown" style="display:none;">👑</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Выбор группы -->
+        <div class="glass-card">
+          <div class="select-bar">
+            <label class="field-label">ФАКУЛЬТЕТ</label>
+            <select id="fac-select"><option>Загрузка...</option></select>
+          </div>
+          <div id="group-area" style="display:none;">
+            <div class="select-bar">
+              <label class="field-label">
+                <span>ОСНОВНАЯ ГРУППА</span>
+                <span class="crown" id="group-crown" style="display:none;">👑</span>
+              </label>
+              <select id="group-select"></select>
+            </div>
+            <button class="action-btn" onclick="switchScreen(1)">📅 Перейти в расписание</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="app-viewport">
-        <div class="screens-container" id="screens-container">
-            <!-- Экран выбора темы (индекс 0) -->
-            <div class="screen" id="theme-screen">
-                <div class="theme-header">
-                    <button class="back-btn" onclick="switchScreen(1)">←</button>
-                    <h2>Выберите тему</h2>
-                </div>
-                <div class="content-scroll">
-                    <div class="glass-card">
-                        <div class="theme-option" onclick="setTheme('light')">
-                            <span>☀️ Светлая</span>
-                            <span class="check" id="check-light">✓</span>
-                        </div>
-                        <div class="theme-option" onclick="setTheme('dark')">
-                            <span>🌙 Темная</span>
-                            <span class="check" id="check-dark">✓</span>
-                        </div>
-                        <div class="theme-option" onclick="setTheme('forest')">
-                            <span>🌲 Лесная</span>
-                            <span class="check" id="check-forest">✓</span>
-                        </div>
-                        <div class="theme-option" onclick="setTheme('red')">
-                            <span>🔥 Рубиновая</span>
-                            <span class="check" id="check-red">✓</span>
-                        </div>
-                        <div class="theme-option" onclick="setTheme('neon')">
-                            <span>💚 Неоновая</span>
-                            <span class="check" id="check-neon">✓</span>
-                        </div>
-                        <div class="theme-option" onclick="setTheme('pink')">
-                            <span>🌸 Розовая</span>
-                            <span class="check" id="check-pink">✓</span>
-                        </div>
-                        <div class="theme-option" onclick="setTheme('dark-pink')">
-                            <span>🌸 Розовая (Темная)</span>
-                            <span class="check" id="check-dark-pink">✓</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Главный экран (индекс 1) -->
-            <div class="screen" id="main-screen">
-                <header class="header">
-                    <div class="container">
-                        <div class="logo">
-                            <img src="img/logo.png" class="logo-img" alt="logo">
-                            <span class="logo-text">ВГУ Mobile</span>
-                        </div>
-                    </div>
-                </header>
-                <div class="content-scroll">
-                    <div class="glass-card">
-                        <div class="select-bar">
-                            <label class="field-label">ФАКУЛЬТЕТ</label>
-                            <select id="fac-select"><option>Загрузка...</option></select>
-                        </div>
-                        
-                        <div id="group-area" style="display:none;">
-                            <div class="select-bar">
-                                <label class="field-label">ГРУППА</label>
-                                <select id="group-select"></select>
-                            </div>
-                            
-                            <button class="action-btn" onclick="openThemeScreen()">🎨 Настроить тему</button>
-                            
-                            <button class="action-btn" onclick="window.open('https://t.me/vsu_mobile', '_blank')">📢 Канал по улучшению</button>
-                            <button class="action-btn btn-danger" onclick="window.open('https://t.me/wch8h', '_blank')">⚠️ Нашли ошибку?</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Экран расписания (индекс 2) -->
-            <div class="screen" id="schedule-screen">
-                <div class="days-tabs" id="days-tabs">
-                    <div class="day-tab" onclick="goToDay(0)">ПН</div>
-                    <div class="day-tab" onclick="goToDay(1)">ВТ</div>
-                    <div class="day-tab" onclick="goToDay(2)">СР</div>
-                    <div class="day-tab" onclick="goToDay(3)">ЧТ</div>
-                    <div class="day-tab" onclick="goToDay(4)">ПТ</div>
-                    <div class="day-tab" onclick="goToDay(5)">СБ</div>
-                </div>
-                <div id="schedule-swiper">
-                    <div class="swiper-track" id="schedule-track"></div>
-                </div>
-            </div>
-
-            <!-- Экран поиска (индекс 3) -->
-            <div class="screen" id="search-screen">
-                <div class="content-scroll">
-                    <h1 class="logo" style="margin: 20px 0;">Поиск</h1>
-                    <div class="glass-card">
-                        <input type="text" id="teacher-input" class="search-input" placeholder="Фамилия преподавателя...">
-                        <button class="action-btn" onclick="searchTeacher()">🔍 Найти</button>
-                    </div>
-                    <div id="teacher-results"></div>
-                </div>
-            </div>
-        </div>
+    <!-- Экран 1: Расписание -->
+    <div class="screen" id="schedule-screen">
+      <div class="days-tabs" id="days-tabs"></div>
+      <div id="schedule-swiper">
+        <div class="swiper-track" id="schedule-track"></div>
+      </div>
     </div>
 
-    <nav class="bottom-nav">
-        <div class="nav-item" onclick="switchScreen(1)">
-            <span>🏠</span>
-            <span>Главная</span>
+    <!-- Экран 2: Поиск -->
+    <div class="screen" id="search-screen">
+      <div class="content-scroll">
+        <h1 class="logo" style="margin:20px 0;">Поиск</h1>
+        <div class="glass-card">
+          <input type="text" id="teacher-input" class="search-input" placeholder="Фамилия преподавателя...">
+          <button class="action-btn" onclick="searchTeacher()">🔍 Найти</button>
         </div>
-        <div class="nav-item active" onclick="switchScreen(2)">
-            <span>📅</span>
-            <span>Расписание</span>
+        <div id="teacher-results"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<section class="access-screen" id="access-screen" hidden>
+  <div class="cat-particles" id="cat-particles" aria-hidden="true"></div>
+  <div class="access-card" id="access-card" role="alert" aria-live="assertive">
+    <div class="access-emblem" id="access-emblem">⛔</div>
+    <p class="access-eyebrow" id="access-eyebrow">Доступ ограничен</p>
+    <h1 class="access-title" id="access-title">Аккаунт заблокирован</h1>
+    <p class="access-message" id="access-message">Для этого аккаунта доступ к приложению закрыт.</p>
+    <p class="access-note" id="access-note">Если вы считаете, что произошла ошибка, свяжитесь с поддержкой.</p>
+    <a class="access-link" id="access-link" href="https://t.me/wch8h" target="_blank" rel="noopener noreferrer">Связаться с поддержкой ↗</a>
+    <button class="action-btn access-retry" id="access-retry" type="button" onclick="init()" hidden>Повторить проверку</button>
+  </div>
+</section>
+
+<!-- МОДАЛКА НАСТРОЕК -->
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>⚙️ Настройки</h2>
+      <button class="modal-close" onclick="closeSettings()" aria-label="Закрыть">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="field-label">ТЕМА ОФОРМЛЕНИЯ</div>
+        <div class="themes-grid" id="themes-list"></div>
+      </div>
+
+      <div class="settings-section">
+        <div class="field-label">СВЯЗЬ</div>
+        <button class="action-btn" onclick="window.open('https://t.me/vsu_mobile','_blank')">📢 Канал по улучшению</button>
+        <button class="action-btn btn-danger" onclick="window.open('https://t.me/wch8h','_blank')">⚠️ Нашли ошибку?</button>
+      </div>
+
+      <div class="settings-section" id="admin-section" hidden>
+        <div class="field-label">👑 АДМИН-ПАНЕЛЬ</div>
+        <button class="action-btn secondary" id="load-users-btn" type="button" onclick="loadUsers()">👥 Список пользователей</button>
+        <div class="admin-users-status" id="admin-users-status" role="status"></div>
+        <div class="admin-users-list" id="admin-users-list"></div>
+      </div>
+
+      <div class="settings-info" id="settings-info">
+        ВГУ Mobile · <strong>v1.0</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://vsu-schedule-bot-code.onrender.com/api";
+const DAYS = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const TYPE_MAP = {'Лек':'Лекция','Лек (off)':'Оффлайн Лекция','Лаб':'Лабораторная работа','ПЗ':'Практическое занятие','Пр':'Практическое занятие','Сем':'Семинар','Экз':'Экзамен','Зач':'Зачет','Куср':'КУСР'};
+const NAV_MAP = [0, 1, 2];                       // индекс экрана = индекс nav
+const THEMES = [
+  ['light','☀️ Светлая'],['dark','🌙 Тёмная'],['forest','🌲 Лесная'],
+  ['red','🔥 Рубиновая'],['neon','💚 Неоновая'],['pink','🌸 Розовая'],
+  ['dark-pink','💖 Розовая тём.']
+];
+const NAV = [['🏠','Главная',0],['📅','Расписание',1],['🔍','Поиск',2]];
+
+/** Минимальное время показа загрузки (мс). Можно поднять до 120000. */
+const MIN_LOADER_MS = 1200;
+
+const $ = id => document.getElementById(id);
+const $$ = sel => [...document.querySelectorAll(sel)];
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+let currentDay = 0, touchX = 0, teacherCache = {};
+let tgUser = null;
+let isAdmin = false;
+let telegramInitData = '';
+let catParticleTimer = null;
+
+async function apiFetch(url, options = {}){
+  const response = await fetch(url, {
+    ...options,
+    headers: {...options.headers, 'X-Telegram-Init-Data':telegramInitData}
+  });
+  if (response.status === 403){
+    const data = await response.clone().json().catch(() => null);
+    if (data?.detail?.status === 'banned') showAccessScreen(true);
+  }
+  return response;
+}
+
+/* === TELEGRAM === */
+function initTelegram(){
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return null;
+  tg.ready();
+  tg.expand();
+  tg.setHeaderColor?.('bg_color');
+  tg.setBackgroundColor?.('bg_color');
+  tg.enableClosingConfirmation?.();
+  return tg;
+}
+
+async function authenticateTelegram(tg){
+  if (!tg?.initData) throw new Error('Откройте приложение через Telegram.');
+
+  const response = await fetch(`${API}/auth`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({initData:tg.initData})
+  });
+  const data = await response.json();
+
+  if (response.status === 403 && data.status === 'banned'){
+    showAccessScreen(true);
+    return false;
+  }
+  if (!response.ok) throw new Error(data.detail || 'Не удалось проверить аккаунт.');
+
+  tgUser = data.user;
+  telegramInitData = tg.initData;
+  isAdmin = data.is_admin === true;
+  $('access-screen').hidden = true;
+  return true;
+}
+
+async function loadUsers(){
+  const button = $('load-users-btn');
+  const status = $('admin-users-status');
+  const list = $('admin-users-list');
+  button.disabled = true;
+  status.textContent = 'Загружаю пользователей…';
+  list.replaceChildren();
+
+  try {
+    const response = await apiFetch(`${API}/admin/users`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Не удалось загрузить список.');
+
+    status.textContent = `Всего пользователей: ${data.users.length}`;
+    if (!data.users.length){
+      status.textContent = 'Пока нет зарегистрированных пользователей.';
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    data.users.forEach(user => {
+      const card = document.createElement('article');
+      card.className = 'admin-user-card';
+
+      const name = document.createElement('div');
+      name.className = 'admin-user-name';
+      name.textContent = user.display_name || user.first_name || 'Без имени';
+
+      const meta = document.createElement('div');
+      meta.className = 'admin-user-meta';
+      meta.textContent = [
+        `ID: ${user.telegram_id}`,
+        user.username ? `@${user.username}` : null,
+        `Добавлен: ${user.created_at ? new Date(user.created_at).toLocaleString('ru-RU') : 'неизвестно'}`
+      ].filter(Boolean).join(' · ');
+
+      const actions = document.createElement('div');
+      actions.className = 'admin-user-actions';
+      const action = document.createElement('button');
+      action.className = `admin-user-action ${user.is_blocked ? 'unblock' : 'block'}`;
+      action.type = 'button';
+      action.textContent = user.is_blocked ? '🔓 Разблокировать' : '🚫 Заблокировать';
+      action.disabled = Number(user.telegram_id) === Number(tgUser?.telegram_id);
+      action.title = action.disabled ? 'Нельзя заблокировать собственный аккаунт' : '';
+      action.onclick = () => updateUserBlock(user, action);
+      actions.appendChild(action);
+
+      card.append(name, meta, actions);
+      fragment.appendChild(card);
+    });
+    list.appendChild(fragment);
+  } catch(error) {
+    console.error('Ошибка загрузки списка пользователей:', error);
+    status.textContent = error.message || 'Не удалось загрузить список пользователей.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function updateUserBlock(user, button){
+  const shouldBlock = !user.is_blocked;
+  const action = shouldBlock ? 'block' : 'unblock';
+  const actionLabel = shouldBlock ? 'Заблокировать' : 'Разблокировать';
+  if (!window.confirm(`${actionLabel} пользователя ${user.display_name || user.telegram_id}?`)) return;
+
+  button.disabled = true;
+  try {
+    const response = await apiFetch(`${API}/admin/users/${encodeURIComponent(user.telegram_id)}/${action}`, {
+      method:'POST'
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || `Не удалось выполнить действие: ${response.status}`);
+    await loadUsers();
+  } catch(error) {
+    console.error('Ошибка изменения блокировки пользователя:', error);
+    $('admin-users-status').textContent = error.message || 'Не удалось изменить блокировку.';
+    button.disabled = false;
+  }
+}
+
+function showAccessScreen(isBanned){
+  const loader = $('loader');
+  loader.classList.add('hidden');
+  setTimeout(() => loader.remove(), 700);
+
+  $('access-screen').hidden = false;
+  $('access-emblem').textContent = isBanned ? '⛔' : '🔒';
+  $('access-eyebrow').textContent = isBanned ? 'Доступ ограничен' : 'Проверка не пройдена';
+  $('access-title').textContent = isBanned ? 'Аккаунт заблокирован' : 'Не удалось войти';
+  $('access-message').textContent = isBanned
+    ? 'Ваш аккаунт был заблокирован за мошеннические действия. Доступ к приложению закрыт.'
+    : 'Не удалось подтвердить аккаунт через Telegram. Проверьте соединение и откройте приложение из Telegram.';
+  $('access-note').textContent = isBanned
+    ? 'Если вы считаете, что произошла ошибка, свяжитесь с поддержкой.'
+    : 'Ваши данные не сохранены. Повторите проверку чуть позже.';
+  $('access-link').hidden = !isBanned;
+  $('access-retry').hidden = isBanned;
+  if (isBanned) launchCatParticles();
+}
+
+function launchCatParticles(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const container = $('cat-particles');
+  const cardRect = $('access-card').getBoundingClientRect();
+  const originX = cardRect.left + cardRect.width / 2;
+  const originY = cardRect.top + cardRect.height / 2;
+
+  const createParticle = () => {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 120 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * .42;
+    const particle = document.createElement('img');
+    particle.className = 'cat-particle';
+    particle.src = 'img/cat.jpg';
+    particle.alt = '';
+    particle.draggable = false;
+    particle.style.setProperty('--origin-x', `${originX}px`);
+    particle.style.setProperty('--origin-y', `${originY}px`);
+    particle.style.setProperty('--size', `${56 + Math.random() * 108}px`);
+    particle.style.setProperty('--travel-x', `${Math.cos(angle) * distance}px`);
+    particle.style.setProperty('--travel-y', `${Math.sin(angle) * distance}px`);
+    particle.style.setProperty('--duration', `${1.5 + Math.random() * 1.1}s`);
+    particle.style.setProperty('--rotation', `${Math.round((Math.random() - .5) * 100)}deg`);
+    particle.addEventListener('animationend', () => particle.remove(), {once:true});
+    container.appendChild(particle);
+  };
+
+  createParticle();
+  if (!catParticleTimer) catParticleTimer = setInterval(createParticle, 260);
+}
+
+/* === ПРОФИЛЬ === */
+function setupProfile(){
+  const avatarEl = $('profile-avatar');
+  const nameEl = $('profile-name-text');
+  const greetEl = $('profile-greeting');
+  const crownEl = $('profile-crown');
+  const logoCrown = $('logo-crown');
+  const groupCrown = $('group-crown');
+  const infoEl = $('settings-info');
+  $('admin-section').hidden = !isAdmin;
+
+  const name = tgUser?.first_name || 'Гость';
+  const h = new Date().getHours();
+  const greet = h < 6 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+
+  greetEl.textContent = greet;
+  nameEl.textContent = name;
+
+  // Аватар из Telegram
+  if (tgUser?.photo_url){
+    const img = new Image();
+    img.src = tgUser.photo_url;
+    img.alt = name;
+    img.referrerPolicy = 'no-referrer';
+    img.onload = () => { avatarEl.innerHTML = ''; avatarEl.appendChild(img); };
+    // fallback — пока грузится, показываем инициал
+    avatarEl.textContent = (name[0] || '?').toUpperCase();
+  } else {
+    avatarEl.textContent = (name[0] || '?').toUpperCase();
+  }
+
+  // Короны для админа
+  if (isAdmin){
+    crownEl.style.display = 'inline-block';
+    logoCrown.style.display = 'inline-block';
+    groupCrown.style.display = 'inline-block';
+  }
+
+  // Инфо в модалке
+  if (tgUser){
+    infoEl.innerHTML = `ВГУ Mobile · <strong>v1.0</strong><br>
+      Telegram ID: ${tgUser.id}${isAdmin ? ' · <span class="crown" style="display:inline-block;">👑</span>' : ''}`;
+  } else {
+    infoEl.innerHTML = `ВГУ Mobile · <strong>v1.0</strong><br>Открыто вне Telegram`;
+  }
+}
+
+/* === ГЕНЕРАЦИЯ UI === */
+function setupUI(){
+  $('themes-list').innerHTML = THEMES.map(([id,l]) =>
+    `<div class="theme-option" data-theme="${id}"><span>${l}</span><span class="check">✓</span></div>`
+  ).join('');
+  $$('.theme-option').forEach(o => o.onclick = () => setTheme(o.dataset.theme));
+
+  $('days-tabs').innerHTML = ['ПН','ВТ','СР','ЧТ','ПТ','СБ'].map((d,i) =>
+    `<div class="day-tab" data-day="${i}">${d}</div>`
+  ).join('');
+  $$('.day-tab').forEach(t => t.onclick = () => goToDay(+t.dataset.day));
+
+  $('bottom-nav').innerHTML = NAV.map(([i,l,s]) =>
+    `<div class="nav-item" data-screen="${s}"><span>${i}</span><span>${l}</span></div>`
+  ).join('');
+  $$('.nav-item').forEach(n => n.onclick = () => switchScreen(+n.dataset.screen));
+}
+
+/* === НАВИГАЦИЯ (3 экрана) === */
+function switchScreen(idx){
+  if (idx < 0 || idx > 2) return;
+  $('screens-container').style.transform = `translateX(-${idx * 33.3333}%)`;
+  $$('.nav-item').forEach((n,i) => n.classList.toggle('active', i === NAV_MAP[idx]));
+
+  const screen = $$('.screen')[idx];
+  screen.querySelectorAll('.glass-card').forEach((c,i) => {
+    c.style.animation = 'none'; void c.offsetHeight;
+    c.style.animation = `cardIn .45s var(--ease) ${i * .05}s both`;
+  });
+}
+
+function goToDay(idx){
+  if (idx < 0 || idx > 5) return;
+  currentDay = idx;
+  localStorage.setItem('vsu_last_day', idx);
+  $('schedule-track').style.transform = `translateX(-${idx * 16.666}%)`;
+  $$('.day-tab').forEach((t,i) => t.classList.toggle('active', i === idx));
+
+  const col = $$('.day-column')[idx];
+  if (col) col.querySelectorAll('.glass-card').forEach((c,i) => {
+    c.style.animation = 'none'; void c.offsetHeight;
+    c.style.animation = `cardIn .45s var(--ease) ${i * .04}s both`;
+  });
+}
+
+/* === НАСТРОЙКИ (модалка) === */
+function openSettings(){ $('settings-modal').classList.add('open'); }
+function closeSettings(){ $('settings-modal').classList.remove('open'); }
+
+/* === ТЕМЫ === */
+function setTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('vsu_theme', theme);
+  const s = getComputedStyle(document.documentElement);
+  document.querySelector('.blob-1').style.background = s.getPropertyValue('--blob1').trim();
+  document.querySelector('.blob-2').style.background = s.getPropertyValue('--blob2').trim();
+  $('bottom-nav').style.background = s.getPropertyValue('--primary-grad');
+  $$('.theme-option').forEach(o => o.classList.toggle('active-theme', o.dataset.theme === theme));
+}
+
+/* === РЕНДЕР ПАРЫ === */
+function renderLessonRow(l, mode = 'group'){
+  const [tStart = '', tEnd = ''] = (l.time || '').replace(/[()]/g,'').split('-');
+  let name = l.name || '', type = '';
+  const m = name.match(/\((Лек(?: \(off\))?|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
+  if (m){ type = TYPE_MAP[m[1]] || m[1]; name = name.replace(m[0],'').trim(); }
+  const subText = mode === 'group' ? (l.teacher || '---') : `Группа: ${l.group || '---'}`;
+  const subIcon = mode === 'group' ? '👨‍🏫' : '👥';
+  return `<div class="lesson-row">
+    <div class="time-block">
+      <span class="time-start">${tStart}</span>
+      <span class="time-end">${tEnd}</span>
+    </div>
+    <div style="flex:1;min-width:0;">
+      ${type ? `<div class="lesson-type">${type}</div>` : ''}
+      <div class="lesson-title">${name}</div>
+      <div class="lesson-meta">
+        <span>📍 ${l.room || '-'}</span>
+        <span>${subIcon} ${subText}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* === ЗАГРУЗКА РАСПИСАНИЯ ===
+ * silent=true — не переключать экран (используется при старте под лоадером).
+ */
+async function loadSchedule(group, { silent = false } = {}){
+  const track = $('schedule-track');
+  track.innerHTML = `<div class="day-column"><div class="glass-card loading"></div></div>`;
+  try {
+    const data = await (await apiFetch(`${API}/schedule/${encodeURIComponent(group)}`)).json();
+    track.innerHTML = DAYS.map(day => {
+      const lessons = data.schedule?.[day] || [];
+      return `<div class="day-column">
+        <div class="glass-card" style="margin-bottom:20px;">
+          <div class="day-title">${day.toUpperCase()}</div>
+          ${lessons.length
+            ? lessons.map(l => renderLessonRow(l,'group')).join('')
+            : `<div class="empty-state"><span class="empty-icon">📚</span><span>Пар нет</span></div>`}
         </div>
-        <div class="nav-item" onclick="switchScreen(3)">
-            <span>🔍</span>
-            <span>Поиск</span>
-        </div>
-    </nav>
+      </div>`;
+    }).join('');
 
-    <script>
-        const API_BASE = "https://vsu-schedule-bot-code.onrender.com/api";
-        let currentDayIndex = 0; 
-        let touchStartX = 0; 
-        let teacherCache = {};
+    const saved = localStorage.getItem('vsu_last_day');
+    const idx = saved !== null ? +saved : (() => { const d = new Date().getDay(); return d === 0 ? 0 : d - 1; })();
+    goToDay(idx);
 
-        const typeMap = {
-            'Лек': 'Лекция',
-            'Лек (off)': 'Оффлайн Лекция',
-            'Лаб': 'Лабораторная работа',
-            'ПЗ': 'Практическое занятие',
-            'Пр': 'Практическое занятие',
-            'Сем': 'Семинар',
-            'Экз': 'Экзамен',
-            'Зач': 'Зачет',
-            'Куср': 'КУСР'
-        };
+    if (!silent) switchScreen(1);
+    return true;
+  } catch {
+    track.innerHTML = `<div class="day-column"><div class="glass-card"><div class="empty-state"><span class="empty-icon">⚠️</span><span>Ошибка загрузки</span></div></div></div>`;
+    return false;
+  }
+}
 
-        const screenToNavIndex = {
-            0: null,
-            1: 0,
-            2: 1,
-            3: 2
-        };
+/* === ПОИСК ПРЕПОДАВАТЕЛЯ === */
+async function searchTeacher(){
+  const name = $('teacher-input').value.trim();
+  if (name.length < 3) return alert("Введите хотя бы 3 буквы фамилии");
+  const res = $('teacher-results');
+  res.innerHTML = `<div class="glass-card loading"></div>`;
+  try {
+    const data = await (await apiFetch(`${API}/teacher/${encodeURIComponent(name)}`)).json();
+    if (!data.schedule || !Object.keys(data.schedule).length){
+      res.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">🔍</span><span>Не найден</span></div></div>`;
+      return;
+    }
+    teacherCache = {};
+    Object.entries(data.schedule).forEach(([day, lessons]) => lessons.forEach(l => {
+      const t = l.teacher || "Неизвестно";
+      (teacherCache[t] ??= {})[day] ??= [];
+      teacherCache[t][day].push(l);
+    }));
 
-        function switchScreen(idx) {
-            const nav = document.querySelector('.bottom-nav');
-            if (idx === 0) {
-                nav.classList.add('hidden');
-            } else {
-                nav.classList.remove('hidden');
-            }
-            
-            document.getElementById('screens-container').style.transform = `translateX(-${idx * 25}%)`;
-            
-            document.querySelectorAll('.nav-item').forEach((n, i) => {
-                n.classList.toggle('active', i === screenToNavIndex[idx]);
-            });
-            
-            // Перезапускаем анимацию для всех карточек на новом экране
-            const currentScreen = document.querySelectorAll('.screen')[idx];
-            const cards = currentScreen.querySelectorAll('.glass-card');
-            cards.forEach(card => {
-                card.style.animation = 'none';
-                card.offsetHeight; // форсируем перерисовку
-                card.style.animation = 'fadeInUp 0.3s ease forwards';
-            });
-        }
+    const names = Object.keys(teacherCache).sort();
+    if (names.length === 1) return renderTeacherSchedule(names[0]);
 
-        function goToDay(idx) {
-            if (idx < 0 || idx > 5) return;
-            currentDayIndex = idx;
-            localStorage.setItem('vsu_last_day', idx);
-            
-            const track = document.getElementById('schedule-track');
-            if (track) track.style.transform = `translateX(-${idx * 16.666}%)`;
-            document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
-            
-            // Анимируем карточки в выбранном дне
-            const dayColumns = document.querySelectorAll('.day-column');
-            const cards = dayColumns[idx].querySelectorAll('.glass-card');
-            cards.forEach(card => {
-                card.style.animation = 'none';
-                card.offsetHeight;
-                card.style.animation = 'fadeInUp 0.3s ease forwards';
-            });
-        }
+    res.innerHTML = `<div class="glass-card">
+      <label class="field-label">НАЙДЕНО:</label>
+      ${names.map(n => `<button class="action-btn secondary" onclick="renderTeacherSchedule('${n.replace(/'/g,"\\'")}')">${n}</button>`).join('')}
+    </div>`;
+  } catch {
+    res.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">⚠️</span><span>Ошибка</span></div></div>`;
+  }
+}
 
-        function openThemeScreen() {
-            switchScreen(0);
-        }
+function renderTeacherSchedule(tName){
+  const sched = teacherCache[tName];
+  let html = `<div class="teacher-name">${tName}</div>
+    <button class="action-btn secondary" style="margin-bottom:20px;" onclick="searchTeacher()">⬅️ Назад</button>`;
+  DAYS.forEach((day, i) => {
+    if (!sched[day]) return;
+    html += `<div class="glass-card teacher-result" style="animation-delay:${i * .08}s">
+      <div class="day-title">${day.toUpperCase()}</div>
+      ${sched[day].sort((a,b) => a.time.localeCompare(b.time)).map(l => renderLessonRow(l,'teacher')).join('')}
+    </div>`;
+  });
+  $('teacher-results').innerHTML = html;
+}
 
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('vsu_theme', theme);
-            
-            const style = getComputedStyle(document.documentElement);
-            const b1 = document.querySelector('.blob-1');
-            const b2 = document.querySelector('.blob-2');
-            if(b1) b1.style.background = style.getPropertyValue('--blob1').trim();
-            if(b2) b2.style.background = style.getPropertyValue('--blob2').trim();
-            
-            const nav = document.querySelector('.bottom-nav');
-            if(nav) {
-                nav.style.background = style.getPropertyValue('--primary-grad');
-            }
-            
-            document.querySelectorAll('.theme-option').forEach(opt => {
-                opt.classList.remove('active-theme');
-            });
-            const activeOption = document.querySelector(`[onclick="setTheme('${theme}')"]`);
-            if(activeOption) activeOption.classList.add('active-theme');
-        }
+/* === ГРУППЫ === */
+async function loadGroups(fac){
+  const sel = $('group-select');
+  $('group-area').style.display = 'block';
+  sel.innerHTML = '<option>...</option>';
+  try {
+    const data = await (await apiFetch(`${API}/faculties/${encodeURIComponent(fac)}/groups`)).json();
+    sel.innerHTML = '<option disabled selected>Выберите группу...</option>' +
+      data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
+  } catch { sel.innerHTML = '<option>Ошибка</option>'; }
+}
 
-        function renderLessonRow(l, mode = 'group') {
-            const timeClean = (l.time || '').replace(/[()]/g, '');
-            const timeParts = timeClean.split('-');
-            const tStart = timeParts[0] || '';
-            const tEnd = timeParts[1] || '';
+/* === ИНИЦИАЛИЗАЦИЯ === */
+async function init(){
+  const startTs = Date.now();
+  const container = $('screens-container');
+  container.style.transition = 'none';
+  setupUI();
+  setTheme(localStorage.getItem('vsu_theme') || 'light');
 
-            let fullName = l.name || '';
-            let typeDisplay = '';
-            
-            const typeMatch = fullName.match(/\((Лек(?: \(off\))?|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
-            if (typeMatch) {
-                typeDisplay = typeMap[typeMatch[1]] || typeMatch[1];
-                fullName = fullName.replace(typeMatch[0], '').trim();
-            }
+  try {
+    const tg = initTelegram();
+    if (!await authenticateTelegram(tg)) return;
+  } catch (error) {
+    console.error('Ошибка проверки аккаунта Telegram:', error);
+    showAccessScreen(false);
+    return;
+  }
 
-            const typeBadge = typeDisplay ? `<div class="lesson-type">${typeDisplay}</div>` : '';
-            const subText = mode === 'group' ? (l.teacher || '---') : `Группа: ${l.group || '---'}`;
-            const subIcon = mode === 'group' ? '👨‍🏫' : '👥';
+  setupProfile();
+  const fSel = $('fac-select');
 
-            return `
-                <div class="lesson-row">
-                    <div class="time-block">
-                        <span class="time-start">${tStart}</span>
-                        <span class="time-end">${tEnd}</span>
-                    </div>
-                    <div style="flex: 1;">
-                        ${typeBadge}
-                        <div style="font-weight: 800; font-size: 15px; margin-bottom: 4px; line-height: 1.2;">${fullName}</div>
-                        <div style="display: flex; gap: 10px; opacity: 0.7; font-size: 12px; font-weight: 600;">
-                            <span>📍 ${l.room || '-'}</span>
-                            <span>${subIcon} ${subText}</span>
-                        </div>
-                    </div>
-                </div>`;
-        }
+  // 3. Подгружаем факультеты и, если есть, группу и расписание (под лоадером)
+  try {
+    const response = await apiFetch(`${API}/faculties`);
+    if (!response.ok) throw new Error(`Не удалось загрузить факультеты: ${response.status}`);
+    const data = await response.json();
+    fSel.innerHTML = '<option disabled selected>Выберите факультет...</option>' +
+      data.faculties.map(f => `<option value="${f}">${f}</option>`).join('');
 
-        async function loadSchedule(group) {
-            const track = document.getElementById('schedule-track');
-            track.innerHTML = '<div class="day-column"><div class="glass-card">Загрузка...</div></div>';
-            try {
-                const r = await fetch(`${API_BASE}/schedule/${encodeURIComponent(group)}`);
-                const data = await r.json();
-                const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-                
-                track.innerHTML = days.map(day => {
-                    const lessons = data.schedule[day] || [];
-                    return `<div class="day-column">
-                        <div class="glass-card" style="margin-bottom: 20px;">
-                            <div style="font-weight:900; color:var(--primary-solid); border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px; font-size:14px;">${day.toUpperCase()}</div>
-                            ${lessons.length ? lessons.map(l => renderLessonRow(l, 'group')).join('') : '<div style="opacity:0.5; padding:40px 0; text-align:center;">Пар нет</div>'}
-                        </div>
-                    </div>`;
-                }).join('');
+    const sF = localStorage.getItem('vsu_fac'), sG = localStorage.getItem('vsu_group');
+    if (sF){
+      fSel.value = sF;
+      await loadGroups(sF);
+      if (sG){
+        $('group-select').value = sG;
+        await loadSchedule(sG, { silent: true });
+      }
+    }
+  } catch {
+    fSel.innerHTML = '<option>Ошибка сети</option>';
+  }
 
-                const lastDay = localStorage.getItem('vsu_last_day');
-                if(lastDay !== null) {
-                    goToDay(parseInt(lastDay));
-                } else { 
-                    let d = new Date().getDay(); 
-                    goToDay(d === 0 ? 0 : d - 1); 
-                }
-                switchScreen(2);
-            } catch (e) { 
-                track.innerHTML = '<div class="day-column"><div class="glass-card">Ошибка загрузки</div></div>'; 
-            }
-        }
+  // 4. Ставим стартовый экран (0 = главная / профиль) БЕЗ анимации
+  const targetScreen = 0;
+  container.style.transform = `translateX(-${targetScreen * 33.3333}%)`;
+  $$('.nav-item').forEach((n,i) => n.classList.toggle('active', i === NAV_MAP[targetScreen]));
 
-        async function searchTeacher() {
-            const nameInput = document.getElementById('teacher-input').value.trim();
-            if(nameInput.length < 3) return alert("Введите хотя бы 3 буквы фамилии");
-            const resDiv = document.getElementById('teacher-results');
-            resDiv.innerHTML = '<div class="glass-card">🔍 Поиск...</div>';
-            try {
-                const r = await fetch(`${API_BASE}/teacher/${encodeURIComponent(nameInput)}`);
-                const data = await r.json();
-                if(!data.schedule || Object.keys(data.schedule).length === 0) {
-                    resDiv.innerHTML = '<div class="glass-card">Не найден</div>';
-                    return;
-                }
-                teacherCache = {};
-                Object.entries(data.schedule).forEach(([day, lessons]) => {
-                    lessons.forEach(l => {
-                        const tName = l.teacher || "Неизвестно";
-                        if (!teacherCache[tName]) teacherCache[tName] = {};
-                        if (!teacherCache[tName][day]) teacherCache[tName][day] = [];
-                        teacherCache[tName][day].push(l);
-                    });
-                });
-                const names = Object.keys(teacherCache).sort();
-                if (names.length === 1) renderTeacherSchedule(names[0]);
-                else {
-                    let html = '<div class="glass-card"><label class="field-label">НАЙДЕНО:</label>';
-                    names.forEach(n => {
-                        html += `<button class="action-btn" style="background:var(--card-bg); color:var(--text); border:1px solid var(--primary); margin-top:8px;" 
-                                onclick="renderTeacherSchedule('${n.replace(/'/g, "\\'")}')">${n}</button>`;
-                    });
-                    resDiv.innerHTML = html + '</div>';
-                }
-            } catch(e) { 
-                resDiv.innerHTML = '<div class="glass-card">Ошибка</div>'; 
-            }
-        }
+  // 5. Минимальное время лоадера
+  const elapsed = Date.now() - startTs;
+  if (elapsed < MIN_LOADER_MS) await delay(MIN_LOADER_MS - elapsed);
 
-        function renderTeacherSchedule(tName) {
-            const resDiv = document.getElementById('teacher-results');
-            const sched = teacherCache[tName];
-            const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-            let html = `<div style="text-align:center; font-weight:900; margin-bottom:15px; color:var(--primary-solid); font-size:18px;">${tName}</div>
-                        <button class="action-btn" style="background:#64748b; margin-bottom:20px;" onclick="searchTeacher()">⬅️ Назад</button>`;
-            
-            days.forEach((day, index) => {
-                if(sched[day]) {
-                    html += `<div class="glass-card teacher-result" style="animation-delay: ${index * 0.1}s;">
-                                <div style="font-weight:900; color:var(--primary-solid); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:12px; font-size:12px;">${day.toUpperCase()}</div>`;
-                    sched[day].sort((a,b) => a.time.localeCompare(b.time)).forEach(l => {
-                        html += renderLessonRow(l, 'teacher');
-                    });
-                    html += `</div>`;
-                }
-            });
-            resDiv.innerHTML = html;
-        }
+  // 6. Скрываем лоадер (плавно)
+  const loader = $('loader');
+  loader.classList.add('hidden');
 
-        async function loadGroups(fac) {
-            const gSel = document.getElementById('group-select');
-            document.getElementById('group-area').style.display = 'block';
-            gSel.innerHTML = '<option>...</option>';
-            try {
-                const r = await fetch(`${API_BASE}/faculties/${encodeURIComponent(fac)}/groups`);
-                const data = await r.json();
-                gSel.innerHTML = '<option disabled selected>Выберите группу...</option>' + 
-                                data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
-            } catch(e) { 
-                gSel.innerHTML = '<option>Ошибка</option>'; 
-            }
-        }
+  // 7. Возвращаем transition — теперь навигация анимируется
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    container.style.transition = 'transform .55s cubic-bezier(.16,1,.3,1)';
+  }));
 
-        async function init() {
-            const container = document.getElementById('screens-container');
-            container.style.transition = 'none';
-            container.style.transform = 'translateX(-50%)';
-            
-            document.querySelectorAll('.nav-item').forEach((n, i) => {
-                n.classList.toggle('active', i === 1);
-            });
-            
-            setTheme(localStorage.getItem('vsu_theme') || 'light');
-            
-            setTimeout(() => {
-                container.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-            }, 100);
-            
-            const fSel = document.getElementById('fac-select');
-            try {
-                const r = await fetch(`${API_BASE}/faculties`);
-                const data = await r.json();
-                fSel.innerHTML = '<option disabled selected>Выберите факультет...</option>' + 
-                                data.faculties.map(f => `<option value="${f}">${f}</option>`).join('');
-                
-                const savedF = localStorage.getItem('vsu_fac'), 
-                    savedG = localStorage.getItem('vsu_group');
-                if (savedF) {
-                    fSel.value = savedF; 
-                    await loadGroups(savedF);
-                    if (savedG) { 
-                        document.getElementById('group-select').value = savedG; 
-                        loadSchedule(savedG); 
-                    }
-                }
-            } catch (e) { 
-                fSel.innerHTML = '<option>Ошибка сети</option>'; 
-            }
-        }
+  // 8. Финальный "блеск" карточек активного экрана
+  const activeScreen = $$('.screen')[targetScreen];
+  activeScreen.querySelectorAll('.glass-card, .profile-card').forEach((c, i) => {
+    c.style.animation = 'none'; void c.offsetHeight;
+    c.style.animation = `cardIn .5s var(--ease) ${i * .06}s both`;
+  });
 
-        document.getElementById('fac-select').onchange = (e) => { 
-            localStorage.setItem('vsu_fac', e.target.value); 
-            loadGroups(e.target.value); 
-        };
-        
-        document.getElementById('group-select').onchange = (e) => { 
-            localStorage.setItem('vsu_group', e.target.value); 
-            loadSchedule(e.target.value); 
-        };
-        
-        const swiperBox = document.getElementById('schedule-swiper');
-        if(swiperBox) {
-            swiperBox.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX, {passive: true});
-            swiperBox.addEventListener('touchend', e => {
-                const diff = touchStartX - e.changedTouches[0].clientX;
-                if (Math.abs(diff) > 60) diff > 0 ? goToDay(currentDayIndex + 1) : goToDay(currentDayIndex - 1);
-            }, {passive: true});
-        }
+  // 9. Убираем лоадер из DOM
+  setTimeout(() => loader.remove(), 1000);
+}
 
-        init();
-    </script>
+/* === СОБЫТИЯ === */
+$('fac-select').onchange = e => { localStorage.setItem('vsu_fac', e.target.value); loadGroups(e.target.value); };
+$('group-select').onchange = e => {
+  localStorage.setItem('vsu_group', e.target.value);
+  loadSchedule(e.target.value); // переключает на экран расписания
+};
+
+const swiperBox = $('schedule-swiper');
+swiperBox.addEventListener('touchstart', e => touchX = e.touches[0].clientX, {passive:true});
+swiperBox.addEventListener('touchend', e => {
+  const diff = touchX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 60) goToDay(currentDay + (diff > 0 ? 1 : -1));
+}, {passive:true});
+
+// Закрытие модалки по Escape (для десктопного тестирования)
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
+
+init();
+</script>
 </body>
 </html>

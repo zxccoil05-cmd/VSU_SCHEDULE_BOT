@@ -1,0 +1,1 @@
+# Add one Telegram user ID per line to block access.

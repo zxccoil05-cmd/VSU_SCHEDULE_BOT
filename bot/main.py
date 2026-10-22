@@ -3,25 +3,45 @@ import logging
 import uvicorn
 import os
 import dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Path as ApiPath
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from contextlib import asynccontextmanager
 from aiogram.client.session.aiohttp import AiohttpSession
-
-from factory import ScheduleFactory
+from pydantic import BaseModel, Field
 
 dotenv.load_dotenv()
+
+from auth import (
+    AdminsFileError,
+    BlacklistError,
+    TelegramInitDataError,
+    UserStoreError,
+    get_blacklisted_user_ids,
+    get_all_users,
+    is_user_blacklisted,
+    is_user_admin,
+    save_user,
+    set_user_blacklisted,
+    verify_telegram_init_data,
+)
+from factory import ScheduleFactory
 
 # --- КОНФИГУРАЦИЯ ---
 TOKEN = os.getenv('BOT_TOKEN')
 WEBAPP_URL = os.getenv('WEBAPP_URL')
 
 factory = ScheduleFactory()
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
+
+
+class TelegramAuthRequest(BaseModel):
+    init_data: str = Field(alias="initData")
 
 # --- ФОНОВАЯ ЗАДАЧА ОБНОВЛЕНИЯ ---
 
@@ -62,25 +82,163 @@ app.add_middleware(
 
 # --- API ЭНДПОИНТЫ ---
 
+@app.post("/api/auth")
+def authenticate_user(payload: TelegramAuthRequest):
+    try:
+        user = verify_telegram_init_data(payload.init_data, TOKEN)
+        user_id = user["id"]
+        if is_user_blacklisted(user_id):
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "status": "banned",
+                    "message": "Доступ к приложению ограничен.",
+                },
+            )
+        admin_status = is_user_admin(user_id)
+        saved_user = save_user(user)
+    except TelegramInitDataError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except (AdminsFileError, BlacklistError, UserStoreError) as exc:
+        logger.exception("Не удалось проверить доступ пользователя Telegram.")
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось проверить доступ. Попробуйте позже.",
+        ) from exc
+
+    return {
+        "status": "ok",
+        "is_admin": admin_status,
+        "user": {
+            **saved_user,
+            "id": user_id,
+            "photo_url": user.get("photo_url"),
+        },
+    }
+
+
+def require_active_user(
+    init_data: str = Header(alias="X-Telegram-Init-Data"),
+) -> dict:
+    try:
+        user = verify_telegram_init_data(init_data, TOKEN)
+        if is_user_blacklisted(user["id"]):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "status": "banned",
+                    "message": "Доступ к приложению ограничен.",
+                },
+            )
+        return user
+    except TelegramInitDataError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except BlacklistError as exc:
+        logger.exception("Не удалось проверить blacklist.txt.")
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось проверить доступ. Попробуйте позже.",
+        ) from exc
+
+
+def require_admin_user(
+    user: dict = Depends(require_active_user),
+) -> dict:
+    try:
+        if not is_user_admin(user["id"]):
+            raise HTTPException(
+                status_code=403,
+                detail="Доступно только администраторам.",
+            )
+    except AdminsFileError as exc:
+        logger.exception("Не удалось проверить admins.txt.")
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось проверить права администратора.",
+        ) from exc
+    return user
+
+
+@app.get("/api/admin/users")
+def get_users(user: dict = Depends(require_admin_user)):
+    try:
+        blocked_ids = get_blacklisted_user_ids()
+        users = get_all_users()
+    except UserStoreError as exc:
+        logger.exception("Не удалось прочитать список пользователей.")
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось загрузить список пользователей.",
+        ) from exc
+    except BlacklistError as exc:
+        logger.exception("Не удалось прочитать blacklist.txt.")
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось проверить блокировки пользователей.",
+        ) from exc
+
+    return {
+        "users": [
+            {
+                "telegram_id": user.get("telegram_id"),
+                "display_name": user.get("display_name"),
+                "first_name": user.get("first_name"),
+                "username": user.get("username"),
+                "created_at": user.get("created_at"),
+                "is_blocked": user.get("telegram_id") in blocked_ids,
+            }
+            for user in users
+        ]
+    }
+
+
+@app.post("/api/admin/users/{user_id}/block")
+def block_user(
+    user_id: int = ApiPath(gt=0),
+    admin: dict = Depends(require_admin_user),
+):
+    if user_id == admin["id"]:
+        raise HTTPException(status_code=400, detail="Нельзя заблокировать собственный аккаунт.")
+    try:
+        set_user_blacklisted(user_id, True)
+    except BlacklistError as exc:
+        logger.exception("Не удалось заблокировать пользователя %s.", user_id)
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {"user_id": user_id, "is_blocked": True}
+
+
+@app.post("/api/admin/users/{user_id}/unblock")
+def unblock_user(
+    user_id: int = ApiPath(gt=0),
+    admin: dict = Depends(require_admin_user),
+):
+    try:
+        set_user_blacklisted(user_id, False)
+    except BlacklistError as exc:
+        logger.exception("Не удалось разблокировать пользователя %s.", user_id)
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {"user_id": user_id, "is_blocked": False}
+
+
 @app.get("/api/faculties")
-async def get_facs():
+async def get_facs(user: dict = Depends(require_active_user)):
     return {"faculties": list(factory.parsers.keys())}
 
 @app.get("/api/faculties/{fac}/groups")
-async def get_groups(fac: str):
+async def get_groups(fac: str, user: dict = Depends(require_active_user)):
     parser = factory.parsers.get(fac)
     if not parser: raise HTTPException(404)
     return {"groups": parser.get_groups()}
 
 @app.get("/api/schedule/{group}")
-async def get_sched(group: str):
+async def get_sched(group: str, user: dict = Depends(require_active_user)):
     sched = factory.get_schedule(group)
     if not sched: raise HTTPException(404)
     return {"schedule": sched}
 
 # НОВЫЙ ЭНДПОИНТ: ПОИСК ПО ПРЕПОДАВАТЕЛЮ
 @app.get("/api/teacher/{name}")
-async def search_teacher(name: str):
+async def search_teacher(name: str, user: dict = Depends(require_active_user)):
     query = name.lower().strip()
     if len(query) < 3:
         raise HTTPException(400, "Минимум 3 символа для поиска")

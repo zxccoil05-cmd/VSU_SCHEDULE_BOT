@@ -1,0 +1,2 @@
+# Add one Telegram admin ID per line.
+6006797219
