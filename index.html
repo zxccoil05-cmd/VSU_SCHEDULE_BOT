@@ -236,7 +236,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .theme-option{
   display:flex;justify-content:space-between;align-items:center;gap:6px;
   padding:14px 12px;border-radius:14px;
-  background:var(--card-bg);border:1px solid var(--border);
+  background:var(--card-bg);border:1px solid var(--border);color:var(--text);
   cursor:pointer;font-weight:700;font-size:11px;
   transition:transform .2s var(--ease-spring),border-color .2s,box-shadow .2s;
 }
@@ -334,6 +334,12 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 [data-theme="forest"]{--bg:#f1faf6;--primary:#168b6a;--primary-solid:#168b6a;--primary-grad:linear-gradient(135deg,#11998e,#38c979);--text:#102b25;--card-bg:rgba(255,255,255,.94);--blob1:#33c98b;--blob2:#54c9d0;--glass:rgba(255,255,255,.8);--border:rgba(22,139,106,.16);--ambient:rgba(17,153,142,.1);}
 [data-theme="aurora"]{--bg:#080b18;--primary:#a78bfa;--primary-solid:#a78bfa;--primary-grad:linear-gradient(120deg,#5eead4,#818cf8 52%,#e879f9);--text:#f4f2ff;--card-bg:#101326;--blob1:#4f46e5;--blob2:#06b6d4;--glass:rgba(16,19,38,.9);--border:rgba(167,139,250,.2);--ambient:rgba(95,77,226,.16);}
 [data-theme="sunset"]{--bg:#fff7f1;--primary:#e85d4a;--primary-solid:#e85d4a;--primary-grad:linear-gradient(120deg,#ff7a59,#ffb347 55%,#f06b9a);--text:#35201e;--card-bg:rgba(255,255,255,.92);--blob1:#ff8a65;--blob2:#f472b6;--glass:rgba(255,255,255,.8);--border:rgba(232,93,74,.17);--ambient:rgba(255,122,89,.13);}
+[data-theme="light"]{--bg:#f5f7fb;--primary:#4f46e5;--primary-solid:#4f46e5;--primary-grad:linear-gradient(135deg,#5b5cf0,#9b6cff);--glass:rgba(255,255,255,.78);--border:rgba(100,116,139,.14);--text:#171827;--card-bg:rgba(255,255,255,.94);--blob1:#7c6cf5;--blob2:#63c9e8;--ambient:rgba(101,91,239,.12);}
+[data-theme="dark-red"]{--bg:#160708;--primary:#ff8794;--primary-solid:#ff8794;--primary-grad:linear-gradient(135deg,#b91c3b,#ff6475);--text:#fff0f1;--card-bg:#261014;--blob1:#b91c3b;--blob2:#5b1020;--border:rgba(255,135,148,.2);--glass:rgba(38,16,20,.9);--ambient:rgba(185,28,59,.16);}
+[data-theme="light-neon"]{--bg:#effcfb;--primary:#087e80;--primary-solid:#087e80;--primary-grad:linear-gradient(135deg,#00a99d,#35b8d0);--text:#102c30;--card-bg:rgba(255,255,255,.94);--blob1:#58d6c6;--blob2:#7bd7ec;--border:rgba(8,126,128,.18);--glass:rgba(255,255,255,.82);--ambient:rgba(0,169,157,.12);}
+[data-theme="dark-forest"]{--bg:#031b14;--primary:#4adea3;--primary-solid:#4adea3;--primary-grad:linear-gradient(135deg,#047857,#34d399);--text:#e7fff4;--card-bg:#08291e;--blob1:#047857;--blob2:#0c5140;--border:rgba(74,222,163,.2);--glass:rgba(8,41,30,.9);--ambient:rgba(4,120,87,.16);}
+[data-theme="light-aurora"]{--bg:#f3f6ff;--primary:#5b54c8;--primary-solid:#5b54c8;--primary-grad:linear-gradient(120deg,#22a99a,#727ce0 52%,#c054c7);--text:#20223c;--card-bg:rgba(255,255,255,.94);--blob1:#a39bf4;--blob2:#70cdd2;--border:rgba(91,84,200,.18);--glass:rgba(255,255,255,.82);--ambient:rgba(114,124,224,.13);}
+[data-theme="dark-sunset"]{--bg:#170d0b;--primary:#ffad70;--primary-solid:#ffad70;--primary-grad:linear-gradient(120deg,#e85d4a,#e89b38 55%,#d84f80);--text:#fff1e8;--card-bg:#281713;--blob1:#a33d31;--blob2:#74334f;--border:rgba(255,173,112,.2);--glass:rgba(40,23,19,.9);--ambient:rgba(232,93,74,.16);}
 
 body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background-image:radial-gradient(ellipse at 12% 8%,var(--ambient,rgba(101,91,239,.12)),transparent 42%);background-attachment:fixed;}
 *{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
@@ -405,6 +411,11 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
 .theme-option[data-theme="dark-pink"]{--swatch:linear-gradient(135deg,#ec4899,#9b5cff);}
 .theme-option[data-theme="aurora"]{--swatch:linear-gradient(120deg,#5eead4,#818cf8,#e879f9);}
 .theme-option[data-theme="sunset"]{--swatch:linear-gradient(120deg,#ff7a59,#ffb347,#f06b9a);}
+.theme-option[data-theme="dark-red"]{--swatch:linear-gradient(135deg,#b91c3b,#ff6475);}
+.theme-option[data-theme="light-neon"]{--swatch:linear-gradient(135deg,#00a99d,#35b8d0);}
+.theme-option[data-theme="dark-forest"]{--swatch:linear-gradient(135deg,#047857,#34d399);}
+.theme-option[data-theme="light-aurora"]{--swatch:linear-gradient(120deg,#22a99a,#727ce0,#c054c7);}
+.theme-option[data-theme="dark-sunset"]{--swatch:linear-gradient(120deg,#e85d4a,#e89b38,#d84f80);}
 .check{display:grid;place-items:center;}
 .check .icon{width:16px;height:16px;}
 .admin-panel{position:relative;overflow:hidden;border-color:color-mix(in srgb,var(--primary-solid) 22%,var(--border));}
@@ -622,9 +633,10 @@ function icon(name, className = 'icon'){
   return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 }
 const THEMES = [
-  ['light','Светлая'],['dark','Чёрная'],['aurora','Северное сияние'],
-  ['sunset','Закат'],['forest','Лесная'],['red','Рубиновая'],
-  ['neon','Неоновая'],['pink','Розовая'],['dark-pink','Ночная роза']
+  ['light','Светлая'],['dark','Чёрная'],['aurora','Северное сияние'],['light-aurora','Северное сияние — светлая'],
+  ['sunset','Закат'],['dark-sunset','Закат — тёмная'],['forest','Лесная'],['dark-forest','Лесная — тёмная'],
+  ['red','Рубиновая'],['dark-red','Рубиновая — тёмная'],['neon','Неоновая'],['light-neon','Неоновая — светлая'],
+  ['pink','Розовая'],['dark-pink','Ночная роза']
 ];
 const NAV = [['home','Главная',0],['calendar','Расписание',1],['search','Поиск',2]];
 
