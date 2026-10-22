@@ -147,8 +147,11 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .swiper-track{display:flex;width:600%;transition:transform .5s var(--ease);}
 .day-column{width:16.666%;padding:10px 5px 0;min-height:100%;}
 .day-title{font-weight:900;color:var(--primary-solid);border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:15px;font-size:12px;}
-.subgroup-schedule-block+.subgroup-schedule-block{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-.subgroup-schedule-title{font-weight:800;font-size:11px;color:var(--primary-solid);margin-bottom:4px;}
+.subgroup-schedule-card{margin:0 0 14px;padding:15px 16px;border-radius:19px;}
+.subgroup-schedule-card:last-child{margin-bottom:0;}
+.subgroup-schedule-title{display:flex;align-items:center;gap:10px;margin:-1px 0 5px;padding:11px 12px;border-radius:14px;background:linear-gradient(110deg,color-mix(in srgb,var(--primary-solid) 15%,transparent),color-mix(in srgb,var(--primary-solid) 5%,transparent));color:var(--primary-solid);font-size:15px;font-weight:900;letter-spacing:.2px;line-height:1.25;}
+.subgroup-schedule-title .subgroup-number{display:grid;place-items:center;flex:none;width:27px;height:27px;border-radius:9px;background:var(--primary-grad);color:#fff;font-size:13px;font-weight:900;box-shadow:0 4px 12px color-mix(in srgb,var(--primary-solid) 25%,transparent);}
+.subgroup-schedule-card .empty-state{padding:26px 12px;}
 
 .lesson-row{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--border);transition:background .3s var(--ease);}
 .lesson-row:last-child{border-bottom:none;}
@@ -633,6 +636,7 @@ const $$ = sel => [...document.querySelectorAll(sel)];
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
 let currentDay = 0, touchX = 0, teacherCache = {};
+let scheduleLoadVersion = 0;
 let tgUser = null;
 let isAdmin = false;
 let telegramInitData = '';
@@ -979,10 +983,9 @@ function renderLessonRow(l, mode = 'group'){
   </div>`;
 }
 
-/* === ЗАГРУЗКА РАСПИСАНИЯ ===
- * silent=true — не переключать экран (используется при старте под лоадером).
- */
-async function loadSchedule(group, faculty, subgroup = 'all', { silent = false, subgroups = [] } = {}){
+/* === ЗАГРУЗКА РАСПИСАНИЯ === */
+async function loadSchedule(group, faculty, subgroup = 'all', { subgroups = [] } = {}){
+  const loadVersion = ++scheduleLoadVersion;
   const track = $('schedule-track');
   track.innerHTML = `<div class="day-column"><div class="glass-card loading"></div></div>`;
   try {
@@ -1007,20 +1010,20 @@ async function loadSchedule(group, faculty, subgroup = 'all', { silent = false, 
           return [{title: '', schedule: data.schedule || {}}];
         })();
 
+    if (loadVersion !== scheduleLoadVersion) return false;
+
     track.innerHTML = DAYS.map(day => {
       return `<div class="day-column">
-        <div class="glass-card" style="margin-bottom:20px;">
-          <div class="day-title">${day.toUpperCase()}</div>
-          ${schedules.map(({title, schedule}) => {
+        <div class="day-title">${day.toUpperCase()}</div>
+          ${schedules.map(({title, schedule}, index) => {
             const lessons = schedule[day] || [];
-            return `<section class="subgroup-schedule-block">
-              ${title ? `<div class="subgroup-schedule-title">${title}</div>` : ''}
+            return `<div class="glass-card subgroup-schedule-card">
+              ${title ? `<div class="subgroup-schedule-title">${title === 'Все подгруппы' ? title : `<span class="subgroup-number">${index + 1}</span><span>Подгруппа ${index + 1}</span>`}</div>` : ''}
               ${lessons.length
                 ? lessons.map(l => renderLessonRow(l,'group')).join('')
                 : `<div class="empty-state"><span class="empty-icon">${icon('book')}</span><span>Пар нет</span></div>`}
-            </section>`;
+            </div>`;
           }).join('')}
-        </div>
       </div>`;
     }).join('');
 
@@ -1028,9 +1031,9 @@ async function loadSchedule(group, faculty, subgroup = 'all', { silent = false, 
     const idx = saved !== null ? +saved : (() => { const d = new Date().getDay(); return d === 0 ? 0 : d - 1; })();
     goToDay(idx);
 
-    if (!silent) switchScreen(1);
     return true;
   } catch {
+    if (loadVersion !== scheduleLoadVersion) return false;
     track.innerHTML = `<div class="day-column"><div class="glass-card"><div class="empty-state"><span class="empty-icon">${icon('warning')}</span><span>Ошибка загрузки</span></div></div></div>`;
     return false;
   }
@@ -1095,12 +1098,12 @@ async function loadGroups(fac, preferredGroup = '', preferredSubgroup = 'all'){
       data.groups.map(g => `<option value="${g}">${g}</option>`).join('');
     if (data.groups.includes(preferredGroup)){
       sel.value = preferredGroup;
-      await loadSubgroups(fac, preferredGroup, preferredSubgroup, {silent:true});
+      await loadSubgroups(fac, preferredGroup, preferredSubgroup);
     }
   } catch { sel.innerHTML = '<option>Ошибка</option>'; }
 }
 
-async function loadSubgroups(faculty, group, preferredSubgroup = 'all', { silent = false } = {}){
+async function loadSubgroups(faculty, group, preferredSubgroup = 'all'){
   const area = $('subgroup-area');
   const sel = $('subgroup-select');
   area.style.display = 'block';
@@ -1115,10 +1118,7 @@ async function loadSubgroups(faculty, group, preferredSubgroup = 'all', { silent
       data.subgroups.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     sel.value = data.subgroups.some(s => s.id === preferredSubgroup) ? preferredSubgroup : 'all';
     localStorage.setItem('vsu_subgroup', sel.value);
-    await loadSchedule(group, faculty, sel.value, {
-      silent,
-      subgroups: data.subgroups,
-    });
+    await loadSchedule(group, faculty, sel.value, {subgroups: data.subgroups});
   } catch {
     sel.innerHTML = '<option>Ошибка</option>';
   }
@@ -1203,7 +1203,10 @@ $('subgroup-select').onchange = e => {
   const faculty = $('fac-select').value;
   const group = $('group-select').value;
   localStorage.setItem('vsu_subgroup', e.target.value);
-  loadSchedule(group, faculty, e.target.value);
+  const subgroups = [...e.target.options]
+    .filter(option => option.value && option.value !== 'all')
+    .map(option => ({id: option.value, name: option.textContent}));
+  loadSchedule(group, faculty, e.target.value, {subgroups});
 };
 
 const swiperBox = $('schedule-swiper');
