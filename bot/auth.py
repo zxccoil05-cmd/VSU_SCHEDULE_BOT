@@ -47,6 +47,14 @@ def _read_users_locked() -> dict[str, dict]:
         not isinstance(record, dict) for record in users.values()
     ):
         raise UserStoreError("Некорректный формат users.json.")
+    if any(
+        "channel_vote" in record or "channel_vote_at" in record
+        for record in users.values()
+    ):
+        for record in users.values():
+            record.pop("channel_vote", None)
+            record.pop("channel_vote_at", None)
+        _write_users_locked(users)
     return users
 
 
@@ -239,8 +247,6 @@ def save_user(user: dict) -> dict:
             "display_name": " ".join(part for part in (first_name, last_name) if part),
             "created_at": previous.get("created_at", now),
             "last_seen_at": now,
-            "channel_vote": previous.get("channel_vote"),
-            "channel_vote_at": previous.get("channel_vote_at"),
         }
         _write_users_locked(users)
 
@@ -257,22 +263,6 @@ def update_user_activity(user_id: int) -> str:
         record["last_seen_at"] = now
         _write_users_locked(users)
     return now
-
-
-def save_user_vote(user_id: int, vote: str) -> bool:
-    if vote not in {"yes", "no"}:
-        raise ValueError("Недопустимый вариант голосования.")
-    with _users_lock:
-        users = _read_users_locked()
-        record = users.get(str(user_id))
-        if record is None:
-            raise UserStoreError("Пользователь не найден в users.json.")
-        if record.get("channel_vote") in {"yes", "no"}:
-            return False
-        record["channel_vote"] = vote
-        record["channel_vote_at"] = datetime.now(timezone.utc).isoformat()
-        _write_users_locked(users)
-    return True
 
 
 def get_all_users() -> list[dict]:

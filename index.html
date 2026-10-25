@@ -189,13 +189,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .welcome-title{margin:0 0 8px;color:var(--primary-solid);font-size:21px;font-weight:900;}
 .welcome-thanks{margin:0 0 16px;font-size:12px;line-height:1.6;opacity:.8;}
 .welcome-features{display:grid;gap:8px;margin:0 0 18px;padding-left:18px;font-size:11px;line-height:1.5;}
-.welcome-poll{padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--glass);}
-.welcome-poll-title{margin:0 0 6px;font-size:13px;font-weight:900;}
-.welcome-poll-note{margin:0 0 12px;font-size:10px;line-height:1.5;opacity:.72;}
-.welcome-vote-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.welcome-vote-button{margin:0;padding:13px 8px;}
-.welcome-vote-status{min-height:16px;margin-top:9px;color:var(--primary-solid);font-size:10px;font-weight:700;}
-.welcome-vote-status.error{color:#ef4444;}
+.welcome-dismiss{width:100%;margin-top:6px;}
 @media (prefers-reduced-motion:reduce){.lesson-row.current-lesson::before,.lesson-progress-fill{animation:none;}}
 
 /* === НИЖНЯЯ НАВИГАЦИЯ === */
@@ -260,7 +254,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .admin-user-card{padding:13px 15px;border:1px solid var(--border);border-radius:16px;background:var(--card-bg);overflow-wrap:anywhere;}
 .admin-user-name{font-size:12px;font-weight:800;color:var(--text);}
 .admin-user-meta{margin-top:5px;font-size:9px;font-weight:600;line-height:1.6;opacity:.62;}
-.admin-user-vote{margin-top:4px;font-size:9px;font-weight:800;color:var(--primary-solid);}
+
 .admin-user-presence{margin-top:5px;font-size:9px;font-weight:800;line-height:1.5;color:var(--primary-solid);}
 .admin-user-actions{display:flex;gap:8px;margin-top:10px;}
 .admin-user-action{flex:1;padding:9px 10px;border:0;border-radius:11px;color:#fff;font:inherit;font-size:9px;font-weight:800;cursor:pointer;}
@@ -475,7 +469,6 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
 .admin-user-card{border-radius:15px;background:var(--glass);padding:13px;}
 .admin-user-name{font-size:12px;}
 .admin-user-meta{font-size:9px;line-height:1.7;}
-.admin-user-vote{font-size:9px;}
 .admin-user-presence{font-size:9px;line-height:1.6;}
 .admin-user-actions{margin-top:12px;}
 .admin-user-action{border-radius:12px;padding:11px 9px;font-size:10px;}
@@ -630,15 +623,7 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
       <li>видеть время последнего обновления и переключать дни недели свайпами;</li>
       <li>выбирать светлую или тёмную тему.</li>
     </ul>
-    <div class="welcome-poll">
-      <p class="welcome-poll-title">Создать канал бота?</p>
-      <p class="welcome-poll-note">Выберите вариант, чтобы продолжить. Ваш голос будет связан с Telegram-аккаунтом и виден администратору приложения.</p>
-      <div class="welcome-vote-actions">
-        <button class="action-btn welcome-vote-button" type="button" data-vote="yes">Да, создать</button>
-        <button class="action-btn secondary welcome-vote-button" type="button" data-vote="no">Пока нет</button>
-      </div>
-      <div class="welcome-vote-status" id="welcome-vote-status" role="status" aria-live="polite"></div>
-    </div>
+    <button class="action-btn welcome-dismiss" id="welcome-dismiss" type="button">Понятно, продолжить</button>
   </div>
 </div>
 
@@ -776,8 +761,7 @@ async function authenticateTelegram(tg){
   if (BROWSER_TEST_MODE){
     tgUser = {
       id:0,
-      first_name:'Локальный тест',
-      channel_vote:localStorage.getItem('vsu_dev_channel_vote')
+      first_name:'Локальный тест'
     };
     isAdmin = true;
     telegramInitData = '';
@@ -824,42 +808,13 @@ function startActivityHeartbeat(){
 }
 
 function openWelcomeModal(){
-  $('welcome-vote-status').textContent = '';
-  $('welcome-vote-status').classList.remove('error');
   $('welcome-modal').classList.add('open');
-  $('welcome-modal').querySelector('[data-vote="yes"]').focus();
+  $('welcome-dismiss').focus();
 }
 
-async function submitWelcomeVote(vote){
-  const buttons = [...$('welcome-modal').querySelectorAll('[data-vote]')];
-  const status = $('welcome-vote-status');
-  buttons.forEach(button => { button.disabled = true; });
-  status.classList.remove('error');
-  status.textContent = 'Сохраняю ваш голос...';
-  try {
-    const response = await apiFetch(`${API}/channel-vote`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({vote})
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || 'Не удалось сохранить голос.');
-    tgUser.channel_vote = data.vote;
-    if (BROWSER_TEST_MODE) localStorage.setItem('vsu_dev_channel_vote', vote);
-    status.textContent = 'Спасибо за ваш голос!';
-    setTimeout(() => $('welcome-modal').classList.remove('open'), 500);
-  } catch (error) {
-    if (error.message === 'Вы уже проголосовали.'){
-      tgUser.channel_vote = vote;
-      status.textContent = 'Ваш голос уже учтён. Спасибо!';
-      setTimeout(() => $('welcome-modal').classList.remove('open'), 500);
-      return;
-    }
-    console.error('Не удалось записать голос в опросе:', error);
-    status.classList.add('error');
-    status.textContent = error.message || 'Ошибка сохранения. Попробуйте ещё раз.';
-    buttons.forEach(button => { button.disabled = false; });
-  }
+function closeWelcomeModal(){
+  $('welcome-modal').classList.remove('open');
+  localStorage.setItem('vsu_welcome_seen', 'true');
 }
 
 async function loadUsers(){
@@ -904,10 +859,6 @@ async function loadUsers(){
         user.username ? `@${user.username}` : null,
         `Добавлен: ${user.created_at ? new Date(user.created_at).toLocaleString('ru-RU') : 'неизвестно'}`
       ].filter(Boolean).join(' · ');
-      const vote = document.createElement('div');
-      vote.className = 'admin-user-vote';
-      vote.dataset.userId = user.telegram_id;
-      vote.textContent = formatUserVote(user.channel_vote);
       const presence = document.createElement('div');
       presence.className = 'admin-user-presence';
       presence.dataset.userId = user.telegram_id;
@@ -930,7 +881,7 @@ async function loadUsers(){
       action.onclick = () => updateUserBlock(user, action);
       actions.appendChild(action);
 
-      card.append(name, meta, vote, presence, actions);
+      card.append(name, meta, presence, actions);
       fragment.appendChild(card);
     });
     list.appendChild(fragment);
@@ -950,10 +901,6 @@ function formatUserPresence(user){
   return `${user.is_online ? 'Сейчас в приложении' : 'Не в приложении'} · Последнее обращение: ${lastSeen}`;
 }
 
-function formatUserVote(vote){
-  return `Голос за канал: ${vote === 'yes' ? 'Да' : vote === 'no' ? 'Нет' : 'нет'}`;
-}
-
 async function refreshAdminPresence(){
   if (!adminUsersLoaded || document.visibilityState !== 'visible') return;
   try {
@@ -963,8 +910,6 @@ async function refreshAdminPresence(){
     data.users.forEach(user => {
       const presence = document.querySelector(`.admin-user-presence[data-user-id="${user.telegram_id}"]`);
       if (presence) presence.textContent = formatUserPresence(user);
-      const vote = document.querySelector(`.admin-user-vote[data-user-id="${user.telegram_id}"]`);
-      if (vote) vote.textContent = formatUserVote(user.channel_vote);
     });
   } catch (error) {
     console.error('Не удалось обновить статус пользователей:', error);
@@ -1121,9 +1066,7 @@ function setupUI(){
     button.onclick = () => setSearchMode(button.dataset.mode);
   });
   $('room-location-select').onchange = updateRoomSearchFields;
-  $('welcome-modal').querySelectorAll('[data-vote]').forEach(button => {
-    button.onclick = () => submitWelcomeVote(button.dataset.vote);
-  });
+  $('welcome-dismiss').onclick = closeWelcomeModal;
 
   $('days-tabs').innerHTML = ['ПН','ВТ','СР','ЧТ','ПТ','СБ'].map((d,i) =>
     `<div class="day-tab" data-day="${i}">${d}</div>`
@@ -1607,7 +1550,7 @@ async function init(){
 
   // 9. Убираем лоадер из DOM
   setTimeout(() => loader.remove(), 1000);
-  if (!tgUser?.channel_vote) openWelcomeModal();
+  if (localStorage.getItem('vsu_welcome_seen') !== 'true') openWelcomeModal();
 }
 
 /* === СОБЫТИЯ === */

@@ -109,20 +109,29 @@ class TelegramAuthTests(unittest.TestCase):
             self.assertEqual(stored["12345"]["first_name"], "Новое имя")
             self.assertEqual(stored["12345"]["username"], "test_user")
 
-    def test_persists_one_channel_vote_and_preserves_it_on_login(self):
+    def test_removes_legacy_channel_vote_data(self):
         with tempfile.TemporaryDirectory() as directory:
             users_file = Path(directory) / "users.json"
-            user = {"id": 12345, "first_name": "Тест"}
+            users_file.write_text(
+                json.dumps(
+                    {
+                        "12345": {
+                            "telegram_id": 12345,
+                            "channel_vote": "yes",
+                            "channel_vote_at": "2026-10-25T00:00:00+00:00",
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
             with patch.object(auth, "USERS_FILE", users_file):
-                auth.save_user(user)
-                self.assertTrue(auth.save_user_vote(12345, "yes"))
-                self.assertFalse(auth.save_user_vote(12345, "no"))
-                saved = auth.save_user({**user, "first_name": "Обновлённое имя"})
+                users = auth.get_all_users()
                 stored = json.loads(users_file.read_text(encoding="utf-8"))["12345"]
 
-            self.assertEqual(saved["channel_vote"], "yes")
-            self.assertEqual(stored["channel_vote"], "yes")
-            self.assertEqual(stored["channel_vote_at"], saved["channel_vote_at"])
+            self.assertNotIn("channel_vote", users[0])
+            self.assertNotIn("channel_vote_at", users[0])
+            self.assertNotIn("channel_vote", stored)
+            self.assertNotIn("channel_vote_at", stored)
 
     def test_updates_persisted_user_activity(self):
         with tempfile.TemporaryDirectory() as directory:

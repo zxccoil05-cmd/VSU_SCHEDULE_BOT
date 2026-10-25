@@ -16,7 +16,6 @@ from aiogram.types import WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from contextlib import asynccontextmanager
 from aiogram.client.session.aiohttp import AiohttpSession
-from typing import Literal
 from pydantic import BaseModel, Field
 
 dotenv.load_dotenv()
@@ -32,7 +31,6 @@ from auth import (
     is_user_admin,
     save_user,
     set_user_blacklisted,
-    save_user_vote,
     update_user_activity,
     verify_telegram_init_data,
 )
@@ -54,10 +52,6 @@ _last_activity: dict[int, datetime] = {}
 
 class TelegramAuthRequest(BaseModel):
     init_data: str = Field(alias="initData")
-
-
-class ChannelVoteRequest(BaseModel):
-    vote: Literal["yes", "no"]
 
 
 def is_local_browser_test(request: Request, enabled_header: str) -> bool:
@@ -278,8 +272,6 @@ def _admin_user_record(user: dict, blocked_ids: set[int]) -> dict:
         "first_name": user.get("first_name"),
         "username": user.get("username"),
         "created_at": user.get("created_at"),
-        "channel_vote": user.get("channel_vote"),
-        "channel_vote_at": user.get("channel_vote_at"),
         "last_seen_at": last_activity.isoformat() if last_activity else None,
         "is_online": (
             (datetime.now(timezone.utc) - last_activity).total_seconds()
@@ -302,7 +294,6 @@ def _admin_activity_record(record: dict) -> dict:
     return {
         "telegram_id": user_id,
         "last_seen_at": latest.isoformat() if latest else None,
-        "channel_vote": record.get("channel_vote"),
         "is_online": is_online,
     }
 
@@ -346,26 +337,6 @@ def update_activity(
         "last_seen_at": timestamp,
         "last_schedule_updated": factory.last_updated_at,
     }
-
-
-@app.post("/api/channel-vote")
-def submit_channel_vote(
-    payload: ChannelVoteRequest,
-    user: dict = Depends(require_active_user),
-):
-    if user["id"] == 0:
-        return {"vote": payload.vote}
-    try:
-        saved = save_user_vote(user["id"], payload.vote)
-    except UserStoreError as exc:
-        logger.exception("Не удалось сохранить голос пользователя %s.", user["id"])
-        raise HTTPException(
-            status_code=500,
-            detail="Не удалось сохранить голос. Попробуйте ещё раз.",
-        ) from exc
-    if not saved:
-        raise HTTPException(status_code=409, detail="Вы уже проголосовали.")
-    return {"vote": payload.vote}
 
 
 @app.post("/api/admin/users/{user_id}/block")
