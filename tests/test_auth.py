@@ -109,6 +109,32 @@ class TelegramAuthTests(unittest.TestCase):
             self.assertEqual(stored["12345"]["first_name"], "Новое имя")
             self.assertEqual(stored["12345"]["username"], "test_user")
 
+    def test_persists_one_channel_vote_and_preserves_it_on_login(self):
+        with tempfile.TemporaryDirectory() as directory:
+            users_file = Path(directory) / "users.json"
+            user = {"id": 12345, "first_name": "Тест"}
+            with patch.object(auth, "USERS_FILE", users_file):
+                auth.save_user(user)
+                self.assertTrue(auth.save_user_vote(12345, "yes"))
+                self.assertFalse(auth.save_user_vote(12345, "no"))
+                saved = auth.save_user({**user, "first_name": "Обновлённое имя"})
+                stored = json.loads(users_file.read_text(encoding="utf-8"))["12345"]
+
+            self.assertEqual(saved["channel_vote"], "yes")
+            self.assertEqual(stored["channel_vote"], "yes")
+            self.assertEqual(stored["channel_vote_at"], saved["channel_vote_at"])
+
+    def test_updates_persisted_user_activity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            users_file = Path(directory) / "users.json"
+            with patch.object(auth, "USERS_FILE", users_file):
+                auth.save_user({"id": 12345, "first_name": "Тест"})
+                timestamp = auth.update_user_activity(12345)
+                stored = json.loads(users_file.read_text(encoding="utf-8"))["12345"]
+
+            self.assertEqual(stored["last_seen_at"], timestamp)
+            self.assertIsNotNone(auth.datetime.fromisoformat(timestamp).tzinfo)
+
     def test_get_all_users_returns_newest_first_without_modifying_data(self):
         with tempfile.TemporaryDirectory() as directory:
             users_file = Path(directory) / "users.json"

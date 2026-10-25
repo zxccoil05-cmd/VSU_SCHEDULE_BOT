@@ -1,5 +1,7 @@
 import logging
+import re
 from collections.abc import Iterator
+from datetime import datetime, timezone
 
 if __package__:
     from .schedule_source import (
@@ -28,6 +30,7 @@ class ScheduleFactory:
         self._group_catalog: dict[str, dict[str, str]] = {
             faculty: {} for faculty in FACULTY_NAMES
         }
+        self.last_updated_at: str | None = None
 
     def update_all(self) -> bool:
         """Refresh all faculties, retaining the previous data for failed ones."""
@@ -71,6 +74,8 @@ class ScheduleFactory:
             len(FACULTY_NAMES),
             total_groups,
         )
+        if successful_faculties:
+            self.last_updated_at = datetime.now(timezone.utc).isoformat()
         return successful_faculties == len(FACULTY_NAMES)
 
     def get_faculties(self) -> list[str]:
@@ -194,3 +199,89 @@ class ScheduleFactory:
                 yield group_name, self._merge_schedules(
                     list(group_data.schedules.values())
                 )
+
+    @staticmethod
+    def _room_location(room: str) -> tuple[str, str, str]:
+        value = room.strip()
+        value = re.sub(r"^ауд(?:итория)?\.?\s*", "", value, flags=re.IGNORECASE)
+        folded = value.casefold()
+
+        if "спортзал" in folded or "спортивный зал" in folded:
+            if "мал" in folded:
+                return "gym:small", "Малый спортзал", value
+            if "больш" in folded:
+                return "gym:large", "Большой спортзал", value
+
+        match = re.match(r"^(.*?)\s*\(([^()]*)\)\s*$", value)
+        if match:
+            room_name, building = match.groups()
+            return f"building:{building.casefold()}", building, room_name.strip()
+
+        match = re.match(r"^(.*?)\s+(главный корпус)\s*$", value, re.IGNORECASE)
+        if match:
+            room_name, building = match.groups()
+            return f"building:{building.casefold()}", building.title(), room_name.strip()
+
+        return "building:none", "Без корпуса", value
+
+    def get_room_locations(self) -> list[dict[str, str]]:
+        locations: dict[str, str] = {
+            "gym:small": "Малый спортзал",
+            "gym:large": "Большой спортзал",
+        }
+        for _, schedule in self.iter_schedules():
+            for lessons in schedule.values():
+                for lesson in lessons:
+                    room = lesson.get("room", "").strip()
+                    if not room or room == "---":
+                        continue
+                    location_id, label, _ = self._room_location(room)
+                    locations[location_id] = label
+        return [
+            {"id": location_id, "name": label}
+            for location_id, label in sorted(
+                locations.items(), key=lambda item: item[1].casefold()
+            )
+        ]
+
+    def search_room(self, room_query: str, location_id: str) -> Schedule:
+        query = room_query.strip().casefold()
+        if not location_id.startswith("gym:") and not query:
+            raise ValueError("Укажите номер аудитории.")
+
+        result: Schedule = {}
+        for group, schedule in self.iter_schedules():
+            for day, lessons in schedule.items():
+                for lesson in lessons:
+                    room = lesson.get("room", "").strip()
+                    if not room or room == "---":
+                        continue
+                    current_location, _, room_name = self._room_location(room)
+                    if current_location != location_id:
+                        continue
+                    if not location_id.startswith("gym:") and query not in room_name.casefold():
+                        continue
+
+                    match = dict(lesson)
+                    match["group"] = group
+                    day_lessons = result.setdefault(day, [])
+                    duplicate = next(
+                        (
+                            existing
+                            for existing in day_lessons
+                            if all(
+                                existing.get(key) == match.get(key)
+                                for key in ("time", "name", "teacher", "room")
+                            )
+                        ),
+                        None,
+                    )
+                    if duplicate:
+                        if group not in duplicate["group"].split(", "):
+                            duplicate["group"] += f", {group}"
+                    else:
+                        day_lessons.append(match)
+
+        for lessons in result.values():
+            lessons.sort(key=lambda lesson: lesson.get("time", ""))
+        return result

@@ -141,6 +141,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .days-tabs{display:flex;gap:6px;position:sticky;top:0;z-index:100;padding:10px;margin:10px 0;background:var(--glass);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);border-radius:20px;border:1px solid var(--border);height:60px;}
 .day-tab{flex:1;text-align:center;padding:10px 0;border-radius:12px;background:transparent;border:none;color:var(--text);opacity:.6;font-size:9px;font-weight:800;cursor:pointer;transition:background .3s var(--ease),color .3s,opacity .3s,transform .3s var(--ease-spring),box-shadow .3s;}
 .day-tab.active{background:var(--primary-grad);color:#fff;opacity:1;transform:translateY(-2px) scale(1.02);box-shadow:0 6px 16px rgba(0,0,0,.2);}
+.schedule-updated{margin:-2px 4px 8px;text-align:right;font-size:9px;font-weight:700;color:var(--text);opacity:.58;}
 
 /* === РАСПИСАНИЕ === */
 #schedule-swiper{overflow:hidden;width:100%;padding-bottom:100px;}
@@ -155,6 +156,20 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 
 .lesson-row{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--border);transition:background .3s var(--ease);}
 .lesson-row:last-child{border-bottom:none;}
+.lesson-row.current-lesson,.lesson-row.next-lesson{position:relative;margin:6px 0;padding:10px 8px;border-radius:14px;overflow:visible;}
+.lesson-row.current-lesson,.lesson-row.next-lesson{padding-top:30px;}
+.lesson-row.current-lesson{border:1px solid color-mix(in srgb,var(--primary-solid) 55%,transparent);background:color-mix(in srgb,var(--primary-solid) 7%,var(--card-bg));}
+@property --snake-angle{syntax:"<angle>";inherits:false;initial-value:0deg;}
+.lesson-row.current-lesson::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--snake-angle),transparent 0 72%,var(--primary-solid) 83%,#fff 88%,transparent 96%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;animation:snake-border 2.2s linear infinite;}
+.lesson-row.next-lesson{border:1px dashed color-mix(in srgb,var(--primary-solid) 48%,var(--border));background:color-mix(in srgb,var(--primary-solid) 3%,var(--card-bg));}
+.lesson-statusbar{position:absolute;top:7px;left:8px;right:8px;display:none;align-items:center;gap:8px;margin:0;}
+.current-lesson .lesson-statusbar,.next-lesson .lesson-statusbar{display:flex;}
+.lesson-status-label{font-size:9px;font-weight:900;letter-spacing:.3px;color:var(--primary-solid);}
+.lesson-progress-track{display:none;flex:1;height:4px;overflow:hidden;border-radius:99px;background:color-mix(in srgb,var(--primary-solid) 14%,transparent);}
+.current-lesson .lesson-progress-track{display:block;}
+.lesson-progress-fill{display:block;height:100%;width:var(--lesson-progress,0%);border-radius:inherit;background:linear-gradient(90deg,var(--primary-solid),#fff,var(--primary-solid));background-size:220% 100%;animation:snake-progress 1.8s linear infinite;transition:width .4s linear;}
+@keyframes snake-border{to{--snake-angle:360deg;}}
+@keyframes snake-progress{to{background-position:220% 0;}}
 .time-block{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:60px;}
 .time-start{font-size:17px;background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900;}
 .time-end{font-size:9px;font-weight:700;color:var(--text);opacity:.5;}
@@ -162,6 +177,26 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .lesson-title{font-weight:800;font-size:13px;color:var(--text);margin-bottom:4px;line-height:1.2;}
 .lesson-meta{display:flex;gap:10px;opacity:.7;font-size:10px;font-weight:600;}
 .teacher-name{text-align:center;font-weight:900;margin-bottom:15px;color:var(--primary-solid);font-size:16px;}
+.search-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 10px;}
+.search-mode-button{padding:12px 8px;border:1px solid var(--border);border-radius:13px;background:var(--glass);color:var(--text);font:inherit;font-size:11px;font-weight:800;}
+.search-mode-button.active{border-color:var(--primary-solid);background:var(--primary-grad);color:#fff;}
+.room-search-label{margin-bottom:7px;}
+.room-results-title{margin:4px 0 12px;text-align:center;color:var(--primary-solid);font-size:14px;font-weight:900;}
+#teacher-search-form[hidden],#room-search-form[hidden],#room-number[hidden],#room-number-label[hidden]{display:none!important;}
+.welcome-overlay{position:fixed;inset:0;z-index:1500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.welcome-overlay.open{display:flex;}
+.welcome-card{width:min(100%,480px);max-height:min(88vh,760px);overflow-y:auto;padding:24px;border:1px solid var(--border);border-radius:24px;background:var(--card-bg);color:var(--text);box-shadow:0 24px 80px rgba(0,0,0,.35);}
+.welcome-title{margin:0 0 8px;color:var(--primary-solid);font-size:21px;font-weight:900;}
+.welcome-thanks{margin:0 0 16px;font-size:12px;line-height:1.6;opacity:.8;}
+.welcome-features{display:grid;gap:8px;margin:0 0 18px;padding-left:18px;font-size:11px;line-height:1.5;}
+.welcome-poll{padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--glass);}
+.welcome-poll-title{margin:0 0 6px;font-size:13px;font-weight:900;}
+.welcome-poll-note{margin:0 0 12px;font-size:10px;line-height:1.5;opacity:.72;}
+.welcome-vote-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.welcome-vote-button{margin:0;padding:13px 8px;}
+.welcome-vote-status{min-height:16px;margin-top:9px;color:var(--primary-solid);font-size:10px;font-weight:700;}
+.welcome-vote-status.error{color:#ef4444;}
+@media (prefers-reduced-motion:reduce){.lesson-row.current-lesson::before,.lesson-progress-fill{animation:none;}}
 
 /* === НИЖНЯЯ НАВИГАЦИЯ === */
 .bottom-nav{position:fixed;bottom:20px;left:20px;right:20px;height:75px;background:var(--primary-grad);border:1px solid var(--primary-solid);display:flex;justify-content:space-around;border-radius:24px;z-index:1000;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.15);transition:background .4s var(--ease),opacity .3s var(--ease),transform .3s var(--ease);padding:0 10px;}
@@ -225,6 +260,8 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .admin-user-card{padding:13px 15px;border:1px solid var(--border);border-radius:16px;background:var(--card-bg);overflow-wrap:anywhere;}
 .admin-user-name{font-size:12px;font-weight:800;color:var(--text);}
 .admin-user-meta{margin-top:5px;font-size:9px;font-weight:600;line-height:1.6;opacity:.62;}
+.admin-user-vote{margin-top:4px;font-size:9px;font-weight:800;color:var(--primary-solid);}
+.admin-user-presence{margin-top:5px;font-size:9px;font-weight:800;line-height:1.5;color:var(--primary-solid);}
 .admin-user-actions{display:flex;gap:8px;margin-top:10px;}
 .admin-user-action{flex:1;padding:9px 10px;border:0;border-radius:11px;color:#fff;font:inherit;font-size:9px;font-weight:800;cursor:pointer;}
 .admin-user-action:disabled{opacity:.55;cursor:wait;}
@@ -438,6 +475,8 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
 .admin-user-card{border-radius:15px;background:var(--glass);padding:13px;}
 .admin-user-name{font-size:12px;}
 .admin-user-meta{font-size:9px;line-height:1.7;}
+.admin-user-vote{font-size:9px;}
+.admin-user-presence{font-size:9px;line-height:1.6;}
 .admin-user-actions{margin-top:12px;}
 .admin-user-action{border-radius:12px;padding:11px 9px;font-size:10px;}
 .admin-users-status{min-height:16px;font-size:10px;}
@@ -547,6 +586,7 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
     <!-- Экран 1: Расписание -->
     <div class="screen" id="schedule-screen">
       <div class="days-tabs" id="days-tabs"></div>
+      <div class="schedule-updated" id="schedule-updated" aria-live="polite">Последнее обновление: —</div>
       <div id="schedule-swiper">
         <div class="swiper-track" id="schedule-track"></div>
       </div>
@@ -556,9 +596,20 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
     <div class="screen" id="search-screen">
       <div class="content-scroll">
         <h1 class="logo" style="margin:20px 0;">Поиск</h1>
-        <div class="glass-card">
+        <div class="search-mode-switch" role="tablist" aria-label="Тип поиска">
+          <button type="button" class="search-mode-button active" data-mode="teacher" role="tab" aria-selected="true">Преподаватель</button>
+          <button type="button" class="search-mode-button" data-mode="room" role="tab" aria-selected="false">Аудитория (БЕТА)</button>
+        </div>
+        <div class="glass-card" id="teacher-search-form">
           <input type="text" id="teacher-input" class="search-input" placeholder="Фамилия преподавателя...">
           <button class="action-btn" id="search-button-icon" onclick="searchTeacher()"></button>
+        </div>
+        <div class="glass-card" id="room-search-form" hidden>
+          <label class="field-label room-search-label" for="room-location-select">КОРПУС ИЛИ СПОРТЗАЛ</label>
+          <select id="room-location-select"><option value="">Загрузка...</option></select>
+          <label class="field-label room-search-label" id="room-number-label" for="room-number">НОМЕР АУДИТОРИИ</label>
+          <input type="text" id="room-number" class="search-input" placeholder="Например, 206 или 109а">
+          <button class="action-btn" id="search-room-button" type="button" onclick="searchRoom()"></button>
         </div>
         <div id="teacher-results"></div>
       </div>
@@ -568,6 +619,28 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
 </div>
 
 <nav class="bottom-nav" id="bottom-nav"></nav>
+
+<div class="welcome-overlay" id="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+  <div class="welcome-card">
+    <h2 class="welcome-title" id="welcome-title">Добро пожаловать!</h2>
+    <p class="welcome-thanks">Спасибо, что пользуетесь расписанием ВГУ. Здесь можно:</p>
+    <ul class="welcome-features">
+      <li>смотреть расписание групп и отдельных подгрупп, с отметками текущей и следующей пары;</li>
+      <li>искать занятия по преподавателю, корпусу, аудитории или спортзалу;</li>
+      <li>видеть время последнего обновления и переключать дни недели свайпами;</li>
+      <li>выбирать светлую или тёмную тему.</li>
+    </ul>
+    <div class="welcome-poll">
+      <p class="welcome-poll-title">Создать канал бота?</p>
+      <p class="welcome-poll-note">Выберите вариант, чтобы продолжить. Ваш голос будет связан с Telegram-аккаунтом и виден администратору приложения.</p>
+      <div class="welcome-vote-actions">
+        <button class="action-btn welcome-vote-button" type="button" data-vote="yes">Да, создать</button>
+        <button class="action-btn secondary welcome-vote-button" type="button" data-vote="no">Пока нет</button>
+      </div>
+      <div class="welcome-vote-status" id="welcome-vote-status" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
 
 <section class="access-screen" id="access-screen" hidden>
   <div class="cat-particles" id="cat-particles" aria-hidden="true"></div>
@@ -609,7 +682,10 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
 </div>
 
 <script>
-const API = "https://vsu-schedule-bot-code.onrender.com/api";
+const BROWSER_TEST_MODE = new URLSearchParams(location.search).get('dev') === '1';
+const API = BROWSER_TEST_MODE
+  ? 'http://127.0.0.1:10000/api'
+  : "https://vsu-schedule-bot-code.onrender.com/api";
 const DAYS = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const TYPE_MAP = {'Лек':'Лекция','Лек (off)':'Оффлайн Лекция','Лаб':'Лабораторная работа','ПЗ':'Практическое занятие','Пр':'Практическое занятие','Сем':'Семинар','Экз':'Экзамен','Зач':'Зачет','Куср':'КУСР'};
 const NAV_MAP = [0, 1, 2];                       // индекс экрана = индекс nav
@@ -657,6 +733,11 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 
 let currentDay = 0, touchX = 0, teacherCache = {};
 let scheduleLoadVersion = 0;
+let activityHeartbeat = null;
+let lessonStatusTimer = null;
+let adminPresenceTimer = null;
+let roomLocationsLoaded = false;
+let adminUsersLoaded = false;
 let tgUser = null;
 let isAdmin = false;
 let telegramInitData = '';
@@ -665,7 +746,11 @@ let catParticleTimer = null;
 async function apiFetch(url, options = {}){
   const response = await fetch(url, {
     ...options,
-    headers: {...options.headers, 'X-Telegram-Init-Data':telegramInitData}
+    headers: {
+      ...options.headers,
+      'X-Telegram-Init-Data':telegramInitData,
+      ...(BROWSER_TEST_MODE ? {'X-Browser-Test-Mode':'true'} : {})
+    }
   });
   if (response.status === 403){
     const data = await response.clone().json().catch(() => null);
@@ -676,6 +761,7 @@ async function apiFetch(url, options = {}){
 
 /* === TELEGRAM === */
 function initTelegram(){
+  if (BROWSER_TEST_MODE) return null;
   const tg = window.Telegram?.WebApp;
   if (!tg) return null;
   tg.ready();
@@ -687,6 +773,17 @@ function initTelegram(){
 }
 
 async function authenticateTelegram(tg){
+  if (BROWSER_TEST_MODE){
+    tgUser = {
+      id:0,
+      first_name:'Локальный тест',
+      channel_vote:localStorage.getItem('vsu_dev_channel_vote')
+    };
+    isAdmin = true;
+    telegramInitData = '';
+    $('access-screen').hidden = true;
+    return true;
+  }
   if (!tg?.initData) throw new Error('Откройте приложение через Telegram.');
 
   const response = await fetch(`${API}/auth`, {
@@ -707,6 +804,62 @@ async function authenticateTelegram(tg){
   isAdmin = data.is_admin === true;
   $('access-screen').hidden = true;
   return true;
+}
+
+function startActivityHeartbeat(){
+  if (activityHeartbeat) clearInterval(activityHeartbeat);
+  const sendHeartbeat = async () => {
+    if (document.visibilityState !== 'visible') return;
+    try {
+      const response = await apiFetch(`${API}/activity`, {method:'POST'});
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data.last_schedule_updated) updateScheduleTimestamp(data.last_schedule_updated);
+    } catch (error) {
+      console.error('Не удалось обновить время активности:', error);
+    }
+  };
+  sendHeartbeat();
+  activityHeartbeat = setInterval(sendHeartbeat, 45000);
+}
+
+function openWelcomeModal(){
+  $('welcome-vote-status').textContent = '';
+  $('welcome-vote-status').classList.remove('error');
+  $('welcome-modal').classList.add('open');
+  $('welcome-modal').querySelector('[data-vote="yes"]').focus();
+}
+
+async function submitWelcomeVote(vote){
+  const buttons = [...$('welcome-modal').querySelectorAll('[data-vote]')];
+  const status = $('welcome-vote-status');
+  buttons.forEach(button => { button.disabled = true; });
+  status.classList.remove('error');
+  status.textContent = 'Сохраняю ваш голос...';
+  try {
+    const response = await apiFetch(`${API}/channel-vote`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({vote})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Не удалось сохранить голос.');
+    tgUser.channel_vote = data.vote;
+    if (BROWSER_TEST_MODE) localStorage.setItem('vsu_dev_channel_vote', vote);
+    status.textContent = 'Спасибо за ваш голос!';
+    setTimeout(() => $('welcome-modal').classList.remove('open'), 500);
+  } catch (error) {
+    if (error.message === 'Вы уже проголосовали.'){
+      tgUser.channel_vote = vote;
+      status.textContent = 'Ваш голос уже учтён. Спасибо!';
+      setTimeout(() => $('welcome-modal').classList.remove('open'), 500);
+      return;
+    }
+    console.error('Не удалось записать голос в опросе:', error);
+    status.classList.add('error');
+    status.textContent = error.message || 'Ошибка сохранения. Попробуйте ещё раз.';
+    buttons.forEach(button => { button.disabled = false; });
+  }
 }
 
 async function loadUsers(){
@@ -731,6 +884,7 @@ async function loadUsers(){
       status.textContent = 'Пока нет зарегистрированных пользователей.';
       $('admin-total').textContent = '0';
       $('admin-search').value = '';
+      adminUsersLoaded = true;
       return;
     }
 
@@ -750,6 +904,14 @@ async function loadUsers(){
         user.username ? `@${user.username}` : null,
         `Добавлен: ${user.created_at ? new Date(user.created_at).toLocaleString('ru-RU') : 'неизвестно'}`
       ].filter(Boolean).join(' · ');
+      const vote = document.createElement('div');
+      vote.className = 'admin-user-vote';
+      vote.dataset.userId = user.telegram_id;
+      vote.textContent = formatUserVote(user.channel_vote);
+      const presence = document.createElement('div');
+      presence.className = 'admin-user-presence';
+      presence.dataset.userId = user.telegram_id;
+      presence.textContent = formatUserPresence(user);
       card.dataset.search = [
         user.display_name,
         user.first_name,
@@ -768,15 +930,44 @@ async function loadUsers(){
       action.onclick = () => updateUserBlock(user, action);
       actions.appendChild(action);
 
-      card.append(name, meta, actions);
+      card.append(name, meta, vote, presence, actions);
       fragment.appendChild(card);
     });
     list.appendChild(fragment);
+    adminUsersLoaded = true;
   } catch(error) {
     console.error('Ошибка загрузки списка пользователей:', error);
     status.textContent = error.message || 'Не удалось загрузить список пользователей.';
   } finally {
     button.disabled = false;
+  }
+}
+
+function formatUserPresence(user){
+  const lastSeen = user.last_seen_at
+    ? new Date(user.last_seen_at).toLocaleString('ru-RU')
+    : 'нет данных';
+  return `${user.is_online ? 'Сейчас в приложении' : 'Не в приложении'} · Последнее обращение: ${lastSeen}`;
+}
+
+function formatUserVote(vote){
+  return `Голос за канал: ${vote === 'yes' ? 'Да' : vote === 'no' ? 'Нет' : 'нет'}`;
+}
+
+async function refreshAdminPresence(){
+  if (!adminUsersLoaded || document.visibilityState !== 'visible') return;
+  try {
+    const response = await apiFetch(`${API}/admin/users/activity`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || `Ошибка обновления активности: ${response.status}`);
+    data.users.forEach(user => {
+      const presence = document.querySelector(`.admin-user-presence[data-user-id="${user.telegram_id}"]`);
+      if (presence) presence.textContent = formatUserPresence(user);
+      const vote = document.querySelector(`.admin-user-vote[data-user-id="${user.telegram_id}"]`);
+      if (vote) vote.textContent = formatUserVote(user.channel_vote);
+    });
+  } catch (error) {
+    console.error('Не удалось обновить статус пользователей:', error);
   }
 }
 
@@ -925,11 +1116,21 @@ function setupUI(){
   $('channel-button').innerHTML = `${icon('megaphone', 'button-icon')}Канал по улучшению`;
   $('support-button').innerHTML = `${icon('warning', 'button-icon')}Нашли ошибку?`;
   $('modal-close-icon').innerHTML = icon('close');
+  $('search-room-button').innerHTML = `${icon('search', 'button-icon')}Найти аудиторию`;
+  $$('.search-mode-button').forEach(button => {
+    button.onclick = () => setSearchMode(button.dataset.mode);
+  });
+  $('room-location-select').onchange = updateRoomSearchFields;
+  $('welcome-modal').querySelectorAll('[data-vote]').forEach(button => {
+    button.onclick = () => submitWelcomeVote(button.dataset.vote);
+  });
 
   $('days-tabs').innerHTML = ['ПН','ВТ','СР','ЧТ','ПТ','СБ'].map((d,i) =>
     `<div class="day-tab" data-day="${i}">${d}</div>`
   ).join('');
   $$('.day-tab').forEach(t => t.onclick = () => goToDay(+t.dataset.day));
+  if (!lessonStatusTimer) lessonStatusTimer = setInterval(updateLessonHighlights, 15000);
+  if (!adminPresenceTimer) adminPresenceTimer = setInterval(refreshAdminPresence, 15000);
 
   $('bottom-nav').innerHTML = NAV.map(([i,l,s]) =>
     `<div class="nav-item" data-screen="${s}"><span>${icon(i, 'nav-icon')}</span><span>${l}</span></div>`
@@ -959,10 +1160,10 @@ function switchScreen(idx){
   });
 }
 
-function goToDay(idx){
+function goToDay(idx, persist = true){
   if (idx < 0 || idx > 5) return;
   currentDay = idx;
-  localStorage.setItem('vsu_last_day', idx);
+  if (persist) localStorage.setItem('vsu_last_day', idx);
   $('schedule-track').style.transform = `translateX(-${idx * 16.666}%)`;
   $$('.day-tab').forEach((t,i) => t.classList.toggle('active', i === idx));
 
@@ -989,14 +1190,95 @@ function setTheme(theme){
 }
 
 /* === РЕНДЕР ПАРЫ === */
-function renderLessonRow(l, mode = 'group'){
+function parseLessonPeriod(time){
+  const match = String(time || '').match(/\(?\s*(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  return {
+    start:Number(match[1]) * 60 + Number(match[2]),
+    end:Number(match[3]) * 60 + Number(match[4])
+  };
+}
+
+function updateLessonHighlights(date = new Date()){
+  const today = (date.getDay() + 6) % 7;
+  const now = date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60;
+  if (arguments.length > 0) goToDay(today === 6 ? 0 : today, false);
+  $$('.subgroup-schedule-card').forEach(card => {
+    const rows = [...card.querySelectorAll('.lesson-row[data-day-index]')];
+    rows.forEach(row => {
+      row.classList.remove('current-lesson','next-lesson');
+      row.style.removeProperty('--lesson-progress');
+      row.querySelector('.lesson-status-label').textContent = '';
+    });
+
+    const todaysRows = rows
+      .filter(row => Number(row.dataset.dayIndex) === today)
+      .sort((a,b) => Number(a.dataset.start) - Number(b.dataset.start));
+    const current = todaysRows.filter(row =>
+      Number(row.dataset.start) <= now && now < Number(row.dataset.end)
+    );
+    current.forEach(row => {
+      row.classList.add('current-lesson');
+      row.querySelector('.lesson-status-label').textContent = 'СЕЙЧАС ИДЁТ';
+      const duration = Number(row.dataset.end) - Number(row.dataset.start);
+      const progress = duration > 0
+        ? Math.min(100, Math.max(0, ((now - Number(row.dataset.start)) / duration) * 100))
+        : 0;
+      row.style.setProperty('--lesson-progress', `${progress}%`);
+    });
+
+    const upcoming = rows
+      .map(row => {
+        const day = Number(row.dataset.dayIndex);
+        const start = Number(row.dataset.start);
+        const end = Number(row.dataset.end);
+        if (!Number.isInteger(day) || day < 0 || day > 5 ||
+            !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+        let dayOffset = (day - today + 7) % 7;
+        let minutesUntilStart = dayOffset * 1440 + start - now;
+        if (minutesUntilStart <= 0) minutesUntilStart += 7 * 1440;
+        return {row, day, start, minutesUntilStart};
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.minutesUntilStart - b.minutesUntilStart);
+    if (upcoming.length){
+      const {day, start} = upcoming[0];
+      upcoming
+        .filter(item => item.day === day && item.start === start)
+        .forEach(({row}) => {
+          if (current.includes(row)) return;
+          row.classList.add('next-lesson');
+          row.querySelector('.lesson-status-label').textContent = 'СЛЕДУЮЩАЯ';
+        });
+    }
+  });
+}
+
+function updateScheduleTimestamp(timestamp){
+  const label = $('schedule-updated');
+  if (!timestamp){
+    label.textContent = 'Последнее обновление: пока нет данных';
+    return;
+  }
+  const date = new Date(timestamp);
+  label.textContent = Number.isNaN(date.getTime())
+    ? 'Последнее обновление: время неизвестно'
+    : `Последнее обновление: ${date.toLocaleString('ru-RU', {dateStyle:'short',timeStyle:'short'})}`;
+}
+
+function renderLessonRow(l, mode = 'group', dayIndex = null){
   const [tStart = '', tEnd = ''] = (l.time || '').replace(/[()]/g,'').split('-');
   let name = l.name || '', type = '';
+  const period = dayIndex === null ? null : parseLessonPeriod(l.time);
+  const scheduleAttributes = period
+    ? ` data-day-index="${dayIndex}" data-start="${period.start}" data-end="${period.end}"`
+    : '';
   const m = name.match(/\((Лек(?: \(off\))?|Лаб|ПЗ|Пр|Сем|Экз|Зач|Куср)\)$/i);
   if (m){ type = TYPE_MAP[m[1]] || m[1]; name = name.replace(m[0],'').trim(); }
   const subText = mode === 'group' ? (l.teacher || '---') : `Группа: ${l.group || '---'}`;
   const subIcon = mode === 'group' ? icon('teacher') : icon('users');
-  return `<div class="lesson-row">
+  return `<div class="lesson-row"${scheduleAttributes}>
+    <div class="lesson-statusbar"><span class="lesson-status-label"></span><span class="lesson-progress-track"><span class="lesson-progress-fill"></span></span></div>
     <div class="time-block">
       <span class="time-start">${tStart}</span>
       <span class="time-end">${tEnd}</span>
@@ -1016,6 +1298,7 @@ function renderLessonRow(l, mode = 'group'){
 async function loadSchedule(group, faculty, subgroup = 'all', { subgroups = [] } = {}){
   const loadVersion = ++scheduleLoadVersion;
   const track = $('schedule-track');
+  updateScheduleTimestamp(null);
   track.innerHTML = `<div class="day-column"><div class="glass-card loading"></div></div>`;
   try {
     const selectedSubgroups = subgroup === 'all' ? subgroups : [];
@@ -1028,7 +1311,8 @@ async function loadSchedule(group, faculty, subgroup = 'all', { subgroups = [] }
           const data = await response.json();
           return {
             title: item.id ? `Подгруппа ${index + 1}` : 'Все подгруппы',
-            schedule: data.schedule || {}
+            schedule: data.schedule || {},
+            lastUpdated: data.last_updated
           };
         }))
       : await (async () => {
@@ -1036,10 +1320,11 @@ async function loadSchedule(group, faculty, subgroup = 'all', { subgroups = [] }
           const response = await apiFetch(`${API}/schedule/${encodeURIComponent(group)}?${params}`);
           if (!response.ok) throw new Error(`Не удалось загрузить расписание: ${response.status}`);
           const data = await response.json();
-          return [{title: '', schedule: data.schedule || {}}];
+          return [{title: '', schedule: data.schedule || {}, lastUpdated: data.last_updated}];
         })();
 
     if (loadVersion !== scheduleLoadVersion) return false;
+    updateScheduleTimestamp(schedules.find(item => item.lastUpdated)?.lastUpdated);
 
     track.innerHTML = DAYS.map(day => {
       return `<div class="day-column">
@@ -1049,7 +1334,7 @@ async function loadSchedule(group, faculty, subgroup = 'all', { subgroups = [] }
             return `<div class="glass-card subgroup-schedule-card">
               ${title ? `<div class="subgroup-schedule-title">${title === 'Все подгруппы' ? title : `<span class="subgroup-number">${index + 1}</span><span>Подгруппа ${index + 1}</span>`}</div>` : ''}
               ${lessons.length
-                ? lessons.map(l => renderLessonRow(l,'group')).join('')
+                ? lessons.map(l => renderLessonRow(l,'group',DAYS.indexOf(day))).join('')
                 : `<div class="empty-state"><span class="empty-icon">${icon('book')}</span><span>Пар нет</span></div>`}
             </div>`;
           }).join('')}
@@ -1059,10 +1344,12 @@ async function loadSchedule(group, faculty, subgroup = 'all', { subgroups = [] }
     const saved = localStorage.getItem('vsu_last_day');
     const idx = saved !== null ? +saved : (() => { const d = new Date().getDay(); return d === 0 ? 0 : d - 1; })();
     goToDay(idx);
+    updateLessonHighlights();
 
     return true;
   } catch {
     if (loadVersion !== scheduleLoadVersion) return false;
+    updateScheduleTimestamp(null);
     track.innerHTML = `<div class="day-column"><div class="glass-card"><div class="empty-state"><span class="empty-icon">${icon('warning')}</span><span>Ошибка загрузки</span></div></div></div>`;
     return false;
   }
@@ -1111,6 +1398,98 @@ function renderTeacherSchedule(tName){
     </div>`;
   });
   $('teacher-results').innerHTML = html;
+}
+
+function setSearchMode(mode){
+  const isRoom = mode === 'room';
+  $('teacher-search-form').hidden = isRoom;
+  $('room-search-form').hidden = !isRoom;
+  $$('.search-mode-button').forEach(button => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+  $('teacher-results').replaceChildren();
+  if (isRoom && !roomLocationsLoaded) loadRoomLocations();
+}
+
+async function loadRoomLocations(){
+  const select = $('room-location-select');
+  select.innerHTML = '<option value="">Загружаю корпуса...</option>';
+  try {
+    const response = await apiFetch(`${API}/rooms/locations`);
+    if (!response.ok) throw new Error(`Не удалось загрузить корпуса: ${response.status}`);
+    const data = await response.json();
+    select.replaceChildren();
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = data.locations.length ? 'Выберите корпус или спортзал...' : 'Расписание ещё загружается';
+    select.appendChild(placeholder);
+    data.locations.forEach(location => {
+      const option = document.createElement('option');
+      option.value = location.id;
+      option.textContent = location.name;
+      select.appendChild(option);
+    });
+    roomLocationsLoaded = data.locations.length > 0;
+    updateRoomSearchFields();
+  } catch (error) {
+    console.error('Не удалось загрузить список корпусов:', error);
+    select.innerHTML = '<option value="">Ошибка загрузки</option>';
+  }
+}
+
+function updateRoomSearchFields(){
+  const location = $('room-location-select').value;
+  const isGym = location.startsWith('gym:');
+  const hasLocation = Boolean(location);
+  $('room-number').hidden = isGym;
+  $('room-number-label').hidden = isGym;
+  $('room-number').required = !isGym;
+  $('room-number').disabled = !hasLocation || isGym;
+  $('search-room-button').disabled = !hasLocation;
+  $('search-room-button').innerHTML = `${icon('search','button-icon')}${isGym ? 'Найти спортзал' : 'Найти аудиторию'}`;
+}
+
+async function searchRoom(){
+  const location = $('room-location-select').value;
+  const room = $('room-number').value.trim();
+  if (!location) return alert('Сначала выберите корпус или спортзал.');
+  if (!location.startsWith('gym:') && !room) return alert('Введите номер аудитории.');
+
+  const results = $('teacher-results');
+  results.innerHTML = `<div class="glass-card loading"></div>`;
+  try {
+    const params = new URLSearchParams({location, room});
+    const response = await apiFetch(`${API}/rooms?${params}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || `Ошибка поиска: ${response.status}`);
+    const daysWithLessons = DAYS.filter(day => data.schedule?.[day]?.length);
+    if (!daysWithLessons.length){
+      results.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">${icon('search')}</span><span>В этой аудитории пары не найдены</span></div></div>`;
+      return;
+    }
+    const selectedLocation = $('room-location-select').selectedOptions[0].textContent;
+    const title = document.createElement('div');
+    title.className = 'room-results-title';
+    title.textContent = location.startsWith('gym:')
+      ? selectedLocation
+      : `${selectedLocation} · ${room}`;
+    results.replaceChildren(title);
+    daysWithLessons.forEach(day => {
+      const card = document.createElement('div');
+      card.className = 'glass-card teacher-result';
+      card.innerHTML = `<div class="day-title">${day.toUpperCase()}</div>${
+        data.schedule[day]
+          .sort((a,b) => a.time.localeCompare(b.time))
+          .map(lesson => renderLessonRow(lesson,'teacher')).join('')
+      }`;
+      results.appendChild(card);
+    });
+  } catch (error) {
+    console.error('Ошибка поиска по аудитории:', error);
+    results.innerHTML = `<div class="glass-card"><div class="empty-state"><span class="empty-icon">${icon('warning')}</span><span>${error.message || 'Ошибка поиска'}</span></div></div>`;
+  }
 }
 
 /* === ГРУППЫ === */
@@ -1171,6 +1550,7 @@ async function init(){
   }
 
   setupProfile();
+  startActivityHeartbeat();
   const fSel = $('fac-select');
 
   // 3. Подгружаем факультеты и, если есть, группу и расписание (под лоадером)
@@ -1219,6 +1599,7 @@ async function init(){
 
   // 9. Убираем лоадер из DOM
   setTimeout(() => loader.remove(), 1000);
+  if (!tgUser?.channel_vote) openWelcomeModal();
 }
 
 /* === СОБЫТИЯ === */

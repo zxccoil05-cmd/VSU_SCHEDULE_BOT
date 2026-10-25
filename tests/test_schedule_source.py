@@ -150,6 +150,71 @@ class ScheduleSourceTests(unittest.TestCase):
             1,
         )
 
+    def test_factory_derives_room_locations_and_searches_by_room_and_gym(self):
+        factory = ScheduleFactory()
+        factory._faculty_data["ПФ"] = {
+            "26ДО1д": GroupSchedule(
+                id="2618",
+                name="26ДО1д",
+                subgroups=[],
+                schedules={
+                    "all": {
+                        "Понедельник": [
+                            {
+                                "time": "08:00-09:25",
+                                "name": "Математика",
+                                "teacher": "Иванов",
+                                "room": "ауд. 206 (ПФ)",
+                            },
+                            {
+                                "time": "09:35-11:00",
+                                "name": "История",
+                                "teacher": "Петров",
+                                "room": "ауд. 206 главный корпус",
+                            },
+                            {
+                                "time": "11:30-12:55",
+                                "name": "Физкультура",
+                                "teacher": "Сидоров",
+                                "room": "ауд. Спортзал большой главный корпус",
+                            },
+                        ],
+                        "Вторник": [
+                            {
+                                "time": "08:00-09:25",
+                                "name": "Семинар",
+                                "teacher": "Смирнова",
+                                "room": "ауд. Спортзал малый главный корпус",
+                            }
+                        ],
+                    }
+                },
+            )
+        }
+
+        locations = factory.get_room_locations()
+        location_ids = {location["id"] for location in locations}
+        self.assertIn("building:пф", location_ids)
+        self.assertIn("building:главный корпус", location_ids)
+        self.assertIn("gym:large", location_ids)
+        self.assertEqual(
+            factory.search_room("206", "building:пф")["Понедельник"][0]["name"],
+            "Математика",
+        )
+        self.assertEqual(
+            factory.search_room("", "gym:large")["Понедельник"][0]["name"],
+            "Физкультура",
+        )
+        self.assertEqual(
+            factory.search_room("", "gym:small")["Вторник"][0]["name"],
+            "Семинар",
+        )
+
+    def test_factory_requires_room_number_for_regular_location(self):
+        factory = ScheduleFactory()
+        with self.assertRaisesRegex(ValueError, "Укажите номер аудитории"):
+            factory.search_room("", "building:пф")
+
     def test_factory_fetches_a_group_on_demand_before_background_refresh(self):
         factory = ScheduleFactory()
         faculty = "ПФ"
@@ -202,7 +267,29 @@ class ScheduleSourceTests(unittest.TestCase):
             self.assertFalse(factory.update_all())
 
         self.assertEqual(factory.get_groups("ПФ"), ["старое"])
+        self.assertIsNone(factory.last_updated_at)
         source.close.assert_called_once()
+
+    def test_successful_refresh_records_utc_update_time(self):
+        factory = ScheduleFactory()
+        faculty_ids = {
+            faculty: str(index)
+            for index, faculty in enumerate(FACULTY_NAMES, start=1)
+        }
+        groups = [ScheduleOption(id="2", name="26ИСиТ1д")]
+        source = Mock()
+        source.get_faculty_ids.return_value = faculty_ids
+        source.get_faculty_groups.return_value = groups
+        source.get_faculty_schedule.side_effect = lambda _, faculty_groups: {
+            group.name: GroupSchedule(id=group.id, name=group.name)
+            for group in faculty_groups
+        }
+
+        with patch("bot.factory.VsuScheduleSource", return_value=source):
+            self.assertTrue(factory.update_all())
+
+        self.assertIsNotNone(factory.last_updated_at)
+        self.assertTrue(factory.last_updated_at.endswith("+00:00"))
 
 
 if __name__ == "__main__":

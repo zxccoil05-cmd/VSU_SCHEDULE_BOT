@@ -35,6 +35,43 @@ class AdminsFileError(RuntimeError):
     pass
 
 
+def _read_users_locked() -> dict[str, dict]:
+    try:
+        users = json.loads(USERS_FILE.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        users = {}
+    except (OSError, json.JSONDecodeError) as exc:
+        raise UserStoreError("Не удалось прочитать users.json.") from exc
+
+    if not isinstance(users, dict) or any(
+        not isinstance(record, dict) for record in users.values()
+    ):
+        raise UserStoreError("Некорректный формат users.json.")
+    return users
+
+
+def _write_users_locked(users: dict[str, dict]) -> None:
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=USERS_FILE.parent,
+            prefix=".users-",
+            suffix=".tmp",
+            delete=False,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+            json.dump(users, temp_file, ensure_ascii=False, indent=2)
+            temp_file.write("\n")
+        os.replace(temp_path, USERS_FILE)
+    except OSError as exc:
+        raise UserStoreError("Не удалось сохранить users.json.") from exc
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+
+
 def verify_telegram_init_data(init_data: str, bot_token: str) -> dict:
     if not init_data or len(init_data) > 8192:
         raise TelegramInitDataError("Некорректные данные Telegram.")
@@ -190,18 +227,7 @@ def save_user(user: dict) -> dict:
     now = datetime.now(timezone.utc).isoformat()
 
     with _users_lock:
-        try:
-            users = json.loads(USERS_FILE.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            users = {}
-        except (OSError, json.JSONDecodeError) as exc:
-            raise UserStoreError("Не удалось прочитать users.json.") from exc
-
-        if not isinstance(users, dict) or any(
-            not isinstance(record, dict) for record in users.values()
-        ):
-            raise UserStoreError("Некорректный формат users.json.")
-
+        users = _read_users_locked()
         previous = users.get(user_id, {})
         first_name = user.get("first_name", "")
         last_name = user.get("last_name", "")
@@ -213,44 +239,45 @@ def save_user(user: dict) -> dict:
             "display_name": " ".join(part for part in (first_name, last_name) if part),
             "created_at": previous.get("created_at", now),
             "last_seen_at": now,
+            "channel_vote": previous.get("channel_vote"),
+            "channel_vote_at": previous.get("channel_vote_at"),
         }
-
-        temp_path = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                encoding="utf-8",
-                dir=USERS_FILE.parent,
-                prefix=".users-",
-                suffix=".tmp",
-                delete=False,
-            ) as temp_file:
-                temp_path = Path(temp_file.name)
-                json.dump(users, temp_file, ensure_ascii=False, indent=2)
-                temp_file.write("\n")
-            os.replace(temp_path, USERS_FILE)
-        except OSError as exc:
-            raise UserStoreError("Не удалось сохранить users.json.") from exc
-        finally:
-            if temp_path is not None:
-                temp_path.unlink(missing_ok=True)
+        _write_users_locked(users)
 
     return users[user_id]
 
 
+def update_user_activity(user_id: int) -> str:
+    now = datetime.now(timezone.utc).isoformat()
+    with _users_lock:
+        users = _read_users_locked()
+        record = users.get(str(user_id))
+        if record is None:
+            raise UserStoreError("Пользователь не найден в users.json.")
+        record["last_seen_at"] = now
+        _write_users_locked(users)
+    return now
+
+
+def save_user_vote(user_id: int, vote: str) -> bool:
+    if vote not in {"yes", "no"}:
+        raise ValueError("Недопустимый вариант голосования.")
+    with _users_lock:
+        users = _read_users_locked()
+        record = users.get(str(user_id))
+        if record is None:
+            raise UserStoreError("Пользователь не найден в users.json.")
+        if record.get("channel_vote") in {"yes", "no"}:
+            return False
+        record["channel_vote"] = vote
+        record["channel_vote_at"] = datetime.now(timezone.utc).isoformat()
+        _write_users_locked(users)
+    return True
+
+
 def get_all_users() -> list[dict]:
     with _users_lock:
-        try:
-            users = json.loads(USERS_FILE.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            return []
-        except (OSError, json.JSONDecodeError) as exc:
-            raise UserStoreError("Не удалось прочитать users.json.") from exc
-
-    if not isinstance(users, dict) or any(
-        not isinstance(record, dict) for record in users.values()
-    ):
-        raise UserStoreError("Некорректный формат users.json.")
+        users = _read_users_locked()
 
     return sorted(
         users.values(),
