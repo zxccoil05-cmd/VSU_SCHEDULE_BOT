@@ -1203,8 +1203,16 @@ function updateLessonHighlights(date = new Date()){
   const today = (date.getDay() + 6) % 7;
   const now = date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60;
   if (arguments.length > 0) goToDay(today === 6 ? 0 : today, false);
-  $$('.subgroup-schedule-card').forEach(card => {
-    const rows = [...card.querySelectorAll('.lesson-row[data-day-index]')];
+  const cardsBySubgroup = new Map();
+  $$('.day-column').forEach(column => {
+    [...column.querySelectorAll('.subgroup-schedule-card')].forEach((card, index) => {
+      if (!cardsBySubgroup.has(index)) cardsBySubgroup.set(index, []);
+      cardsBySubgroup.get(index).push(card);
+    });
+  });
+
+  cardsBySubgroup.forEach(cards => {
+    const rows = cards.flatMap(card => [...card.querySelectorAll('.lesson-row[data-day-index]')]);
     rows.forEach(row => {
       row.classList.remove('current-lesson','next-lesson');
       row.style.removeProperty('--lesson-progress');
@@ -1232,7 +1240,8 @@ function updateLessonHighlights(date = new Date()){
         const day = Number(row.dataset.dayIndex);
         const start = Number(row.dataset.start);
         const end = Number(row.dataset.end);
-        if (!Number.isInteger(day) || day < 0 || day > 5 ||
+        if (current.includes(row) ||
+            !Number.isInteger(day) || day < 0 || day > 5 ||
             !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
         let dayOffset = (day - today + 7) % 7;
         let minutesUntilStart = dayOffset * 1440 + start - now;
@@ -1246,7 +1255,6 @@ function updateLessonHighlights(date = new Date()){
       upcoming
         .filter(item => item.day === day && item.start === start)
         .forEach(({row}) => {
-          if (current.includes(row)) return;
           row.classList.add('next-lesson');
           row.querySelector('.lesson-status-label').textContent = 'СЛЕДУЮЩАЯ';
         });
