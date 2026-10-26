@@ -183,13 +183,13 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .room-search-label{margin-bottom:7px;}
 .room-results-title{margin:4px 0 12px;text-align:center;color:var(--primary-solid);font-size:14px;font-weight:900;}
 #teacher-search-form[hidden],#room-search-form[hidden],#room-number[hidden],#room-number-label[hidden]{display:none!important;}
-.welcome-overlay{position:fixed;inset:0;z-index:1500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
-.welcome-overlay.open{display:flex;}
-.welcome-card{width:min(100%,480px);max-height:min(88vh,760px);overflow-y:auto;padding:24px;border:1px solid var(--border);border-radius:24px;background:var(--card-bg);color:var(--text);box-shadow:0 24px 80px rgba(0,0,0,.35);}
-.welcome-title{margin:0 0 8px;color:var(--primary-solid);font-size:21px;font-weight:900;}
-.welcome-thanks{margin:0 0 16px;font-size:12px;line-height:1.6;opacity:.8;}
-.welcome-features{display:grid;gap:8px;margin:0 0 18px;padding-left:18px;font-size:11px;line-height:1.5;}
-.welcome-dismiss{width:100%;margin-top:6px;}
+.birthday-overlay{position:fixed;inset:0;z-index:1500;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.68);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.birthday-overlay.open{display:flex;}
+.birthday-card{width:min(100%,420px);padding:26px 24px;border:1px solid var(--border);border-radius:24px;background:var(--card-bg);color:var(--text);text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.35);}
+.birthday-icon{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 16px;border-radius:19px;background:var(--primary-grad);color:#fff;font-size:27px;}
+.birthday-title{margin:0 0 10px;color:var(--primary-solid);font-size:22px;font-weight:900;}
+.birthday-message{margin:0 0 20px;font-size:13px;line-height:1.65;opacity:.82;}
+.birthday-dismiss{width:100%;}
 @media (prefers-reduced-motion:reduce){.lesson-row.current-lesson::before,.lesson-progress-fill{animation:none;}}
 
 /* === НИЖНЯЯ НАВИГАЦИЯ === */
@@ -254,6 +254,7 @@ select:focus,.search-input:focus{border-color:var(--primary-solid);}
 .admin-user-card{padding:13px 15px;border:1px solid var(--border);border-radius:16px;background:var(--card-bg);overflow-wrap:anywhere;}
 .admin-user-name{font-size:12px;font-weight:800;color:var(--text);}
 .admin-user-meta{margin-top:5px;font-size:9px;font-weight:600;line-height:1.6;opacity:.62;}
+.admin-user-group{margin-top:6px;font-size:10px;font-weight:800;color:var(--primary-solid);}
 
 .admin-user-presence{margin-top:5px;font-size:9px;font-weight:800;line-height:1.5;color:var(--primary-solid);}
 .admin-user-actions{display:flex;gap:8px;margin-top:10px;}
@@ -613,17 +614,12 @@ select,.search-input{padding:14px 15px;border-radius:14px;background:var(--glass
 
 <nav class="bottom-nav" id="bottom-nav"></nav>
 
-<div class="welcome-overlay" id="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
-  <div class="welcome-card">
-    <h2 class="welcome-title" id="welcome-title">Добро пожаловать!</h2>
-    <p class="welcome-thanks">Спасибо, что пользуетесь расписанием ВГУ. Здесь можно:</p>
-    <ul class="welcome-features">
-      <li>смотреть расписание групп и отдельных подгрупп, с отметками текущей и следующей пары;</li>
-      <li>искать занятия по преподавателю, корпусу, аудитории или спортзалу;</li>
-      <li>видеть время последнего обновления и переключать дни недели свайпами;</li>
-      <li>выбирать светлую или тёмную тему.</li>
-    </ul>
-    <button class="action-btn welcome-dismiss" id="welcome-dismiss" type="button">Понятно, продолжить</button>
+<div class="birthday-overlay" id="birthday-modal" role="dialog" aria-modal="true" aria-labelledby="birthday-title">
+  <div class="birthday-card">
+    <div class="birthday-icon" aria-hidden="true">🎉</div>
+    <h2 class="birthday-title" id="birthday-title">С днём рождения!</h2>
+    <p class="birthday-message">Сегодня день рождения у создателя этого приложения! Спасибо, что пользуетесь им. Желаем отличного дня и хорошего настроения!</p>
+    <button class="action-btn birthday-dismiss" id="birthday-dismiss" type="button">Спасибо!</button>
   </div>
 </div>
 
@@ -723,6 +719,7 @@ let lessonStatusTimer = null;
 let adminPresenceTimer = null;
 let roomLocationsLoaded = false;
 let adminUsersLoaded = false;
+let adminUsersRefreshing = false;
 let tgUser = null;
 let isAdmin = false;
 let telegramInitData = '';
@@ -792,40 +789,64 @@ async function authenticateTelegram(tg){
 
 function startActivityHeartbeat(){
   if (activityHeartbeat) clearInterval(activityHeartbeat);
-  const sendHeartbeat = async () => {
-    if (document.visibilityState !== 'visible') return;
-    try {
-      const response = await apiFetch(`${API}/activity`, {method:'POST'});
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      if (data.last_schedule_updated) updateScheduleTimestamp(data.last_schedule_updated);
-    } catch (error) {
-      console.error('Не удалось обновить время активности:', error);
-    }
-  };
-  sendHeartbeat();
-  activityHeartbeat = setInterval(sendHeartbeat, 45000);
+  sendActivityHeartbeat();
+  activityHeartbeat = setInterval(sendActivityHeartbeat, 45000);
 }
 
-function openWelcomeModal(){
-  $('welcome-modal').classList.add('open');
-  $('welcome-dismiss').focus();
+async function sendActivityHeartbeat(){
+  if (document.visibilityState !== 'visible') return;
+  const groupSelect = $('group-select');
+  const selectedOption = groupSelect?.selectedOptions[0];
+  const selectedGroup = !selectedOption || selectedOption.disabled || !groupSelect.value
+    ? ''
+    : groupSelect?.value || '';
+  try {
+    const response = await apiFetch(`${API}/activity`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({current_group:selectedGroup})
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (data.last_schedule_updated) updateScheduleTimestamp(data.last_schedule_updated);
+  } catch (error) {
+    console.error('Не удалось обновить время активности:', error);
+  }
 }
 
-function closeWelcomeModal(){
-  $('welcome-modal').classList.remove('open');
-  localStorage.setItem('vsu_welcome_seen', 'true');
+function openBirthdayModal(){
+  const key = `vsu_creator_birthday_seen_${new Date().getFullYear()}`;
+  if (localStorage.getItem(key) === 'true') return;
+  $('birthday-modal').dataset.seenKey = key;
+  $('birthday-modal').classList.add('open');
+  $('birthday-dismiss').focus();
 }
 
-async function loadUsers(){
+function closeBirthdayModal(){
+  const modal = $('birthday-modal');
+  modal.classList.remove('open');
+  if (modal.dataset.seenKey) localStorage.setItem(modal.dataset.seenKey, 'true');
+}
+
+function maybeShowBirthdayModal(){
+  const today = new Date();
+  if (today.getMonth() === 9 && today.getDate() === 27) openBirthdayModal();
+}
+
+async function loadUsers({silent = false} = {}){
+  if (adminUsersRefreshing || (silent && !adminUsersLoaded)) return;
+  adminUsersRefreshing = true;
   const button = $('load-users-btn');
   const status = $('admin-users-status');
   const list = $('admin-users-list');
-  button.disabled = true;
-  status.textContent = 'Загружаю пользователей…';
-  list.replaceChildren();
-  $('admin-total').textContent = '—';
-  $('admin-search').hidden = true;
+  const scrollTop = list.scrollTop;
+  if (!silent){
+    button.disabled = true;
+    status.textContent = 'Загружаю пользователей…';
+    list.replaceChildren();
+    $('admin-total').textContent = '—';
+    $('admin-search').hidden = true;
+  }
 
   try {
     const response = await apiFetch(`${API}/admin/users`);
@@ -838,7 +859,7 @@ async function loadUsers(){
     if (!data.users.length){
       status.textContent = 'Пока нет зарегистрированных пользователей.';
       $('admin-total').textContent = '0';
-      $('admin-search').value = '';
+      list.replaceChildren();
       adminUsersLoaded = true;
       return;
     }
@@ -859,6 +880,10 @@ async function loadUsers(){
         user.username ? `@${user.username}` : null,
         `Добавлен: ${user.created_at ? new Date(user.created_at).toLocaleString('ru-RU') : 'неизвестно'}`
       ].filter(Boolean).join(' · ');
+      const group = document.createElement('div');
+      group.className = 'admin-user-group';
+      group.dataset.userId = user.telegram_id;
+      group.textContent = `Группа: ${user.current_group || 'не выбрана'}`;
       const presence = document.createElement('div');
       presence.className = 'admin-user-presence';
       presence.dataset.userId = user.telegram_id;
@@ -867,7 +892,8 @@ async function loadUsers(){
         user.display_name,
         user.first_name,
         user.username,
-        user.telegram_id
+        user.telegram_id,
+        user.current_group
       ].filter(Boolean).join(' ').toLocaleLowerCase('ru');
 
       const actions = document.createElement('div');
@@ -881,17 +907,30 @@ async function loadUsers(){
       action.onclick = () => updateUserBlock(user, action);
       actions.appendChild(action);
 
-      card.append(name, meta, presence, actions);
+      card.append(name, meta, group, presence, actions);
       fragment.appendChild(card);
     });
-    list.appendChild(fragment);
+    list.replaceChildren(fragment);
+    list.scrollTop = scrollTop;
     adminUsersLoaded = true;
+    filterAdminUsers();
   } catch(error) {
     console.error('Ошибка загрузки списка пользователей:', error);
     status.textContent = error.message || 'Не удалось загрузить список пользователей.';
   } finally {
-    button.disabled = false;
+    adminUsersRefreshing = false;
+    if (!silent) button.disabled = false;
   }
+}
+
+function filterAdminUsers(){
+  const query = $('admin-search').value.trim().toLocaleLowerCase('ru');
+  let visibleCount = 0;
+  $$('.admin-user-card').forEach(card => {
+    card.hidden = !card.dataset.search.includes(query);
+    if (!card.hidden) visibleCount++;
+  });
+  if (query) $('admin-users-status').textContent = `Найдено: ${visibleCount}`;
 }
 
 function formatUserPresence(user){
@@ -902,18 +941,8 @@ function formatUserPresence(user){
 }
 
 async function refreshAdminPresence(){
-  if (!adminUsersLoaded || document.visibilityState !== 'visible') return;
-  try {
-    const response = await apiFetch(`${API}/admin/users/activity`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || `Ошибка обновления активности: ${response.status}`);
-    data.users.forEach(user => {
-      const presence = document.querySelector(`.admin-user-presence[data-user-id="${user.telegram_id}"]`);
-      if (presence) presence.textContent = formatUserPresence(user);
-    });
-  } catch (error) {
-    console.error('Не удалось обновить статус пользователей:', error);
-  }
+  if (document.visibilityState !== 'visible') return;
+  await loadUsers({silent:adminUsersLoaded});
 }
 
 async function updateUserBlock(user, button){
@@ -1066,7 +1095,7 @@ function setupUI(){
     button.onclick = () => setSearchMode(button.dataset.mode);
   });
   $('room-location-select').onchange = updateRoomSearchFields;
-  $('welcome-dismiss').onclick = closeWelcomeModal;
+  $('birthday-dismiss').onclick = closeBirthdayModal;
 
   $('days-tabs').innerHTML = ['ПН','ВТ','СР','ЧТ','ПТ','СБ'].map((d,i) =>
     `<div class="day-tab" data-day="${i}">${d}</div>`
@@ -1080,13 +1109,7 @@ function setupUI(){
   ).join('');
   $$('.nav-item').forEach(n => n.onclick = () => switchScreen(+n.dataset.screen));
   $('admin-search').oninput = e => {
-    const query = e.target.value.trim().toLocaleLowerCase('ru');
-    let visibleCount = 0;
-    $$('.admin-user-card').forEach(card => {
-      card.hidden = !card.dataset.search.includes(query);
-      if (!card.hidden) visibleCount++;
-    });
-    if (query) $('admin-users-status').textContent = `Найдено: ${visibleCount}`;
+    filterAdminUsers();
   };
 }
 
@@ -1296,6 +1319,7 @@ async function loadSchedule(group, faculty, subgroup = 'all', { subgroups = [] }
     const idx = saved !== null ? +saved : (() => { const d = new Date().getDay(); return d === 0 ? 0 : d - 1; })();
     goToDay(idx);
     updateLessonHighlights();
+    void sendActivityHeartbeat();
 
     return true;
   } catch {
@@ -1448,7 +1472,7 @@ async function loadGroups(fac, preferredGroup = '', preferredSubgroup = 'all'){
   const sel = $('group-select');
   $('group-area').style.display = 'block';
   $('subgroup-area').style.display = 'none';
-  sel.innerHTML = '<option>...</option>';
+  sel.innerHTML = '<option value="" disabled selected>Загрузка...</option>';
   try {
     const response = await apiFetch(`${API}/faculties/${encodeURIComponent(fac)}/groups`);
     if (!response.ok) throw new Error(`Не удалось загрузить группы: ${response.status}`);
@@ -1459,7 +1483,7 @@ async function loadGroups(fac, preferredGroup = '', preferredSubgroup = 'all'){
       sel.value = preferredGroup;
       await loadSubgroups(fac, preferredGroup, preferredSubgroup);
     }
-  } catch { sel.innerHTML = '<option>Ошибка</option>'; }
+  } catch { sel.innerHTML = '<option value="" disabled selected>Ошибка</option>'; }
 }
 
 async function loadSubgroups(faculty, group, preferredSubgroup = 'all'){
@@ -1501,7 +1525,7 @@ async function init(){
   }
 
   setupProfile();
-  startActivityHeartbeat();
+  if (isAdmin) void loadUsers();
   const fSel = $('fac-select');
 
   // 3. Подгружаем факультеты и, если есть, группу и расписание (под лоадером)
@@ -1522,6 +1546,7 @@ async function init(){
   } catch {
     fSel.innerHTML = '<option>Ошибка сети</option>';
   }
+  startActivityHeartbeat();
 
   // 4. Ставим стартовый экран (0 = главная / профиль) БЕЗ анимации
   const targetScreen = 0;
@@ -1550,7 +1575,7 @@ async function init(){
 
   // 9. Убираем лоадер из DOM
   setTimeout(() => loader.remove(), 1000);
-  if (localStorage.getItem('vsu_welcome_seen') !== 'true') openWelcomeModal();
+  maybeShowBirthdayModal();
 }
 
 /* === СОБЫТИЯ === */

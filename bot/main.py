@@ -54,6 +54,10 @@ class TelegramAuthRequest(BaseModel):
     init_data: str = Field(alias="initData")
 
 
+class ActivityRequest(BaseModel):
+    current_group: str | None = Field(default=None, max_length=120)
+
+
 def is_local_browser_test(request: Request, enabled_header: str) -> bool:
     client = request.client
     if not BROWSER_TEST_MODE or enabled_header.casefold() != "true" or client is None:
@@ -255,12 +259,27 @@ def get_users(user: dict = Depends(require_admin_user)):
             detail="Не удалось проверить блокировки пользователей.",
         ) from exc
 
+    admin_users = [_admin_user_record(user, blocked_ids) for user in users]
     return {
-        "users": [
-            _admin_user_record(user, blocked_ids)
-            for user in users
-        ]
+        "users": sorted(
+            admin_users,
+            key=lambda record: (
+                record["is_online"],
+                _activity_sort_value(record["last_seen_at"]),
+            ),
+            reverse=True,
+        )
     }
+
+
+def _activity_sort_value(value: str | None) -> datetime:
+    if not value:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
 def _admin_user_record(user: dict, blocked_ids: set[int]) -> dict:
@@ -272,6 +291,7 @@ def _admin_user_record(user: dict, blocked_ids: set[int]) -> dict:
         "first_name": user.get("first_name"),
         "username": user.get("username"),
         "created_at": user.get("created_at"),
+        "current_group": user.get("current_group"),
         "last_seen_at": last_activity.isoformat() if last_activity else None,
         "is_online": (
             (datetime.now(timezone.utc) - last_activity).total_seconds()
@@ -293,6 +313,7 @@ def _admin_activity_record(record: dict) -> dict:
     )
     return {
         "telegram_id": user_id,
+        "current_group": record.get("current_group"),
         "last_seen_at": latest.isoformat() if latest else None,
         "is_online": is_online,
     }
@@ -316,6 +337,7 @@ def get_user_activity(user: dict = Depends(require_admin_user)):
 @app.post("/api/activity")
 def update_activity(
     request: Request,
+    payload: ActivityRequest | None = None,
     user: dict = Depends(require_active_user),
     browser_test: str = Header(default="", alias="X-Browser-Test-Mode"),
 ):
@@ -326,7 +348,8 @@ def update_activity(
             "last_schedule_updated": factory.last_updated_at,
         }
     try:
-        timestamp = update_user_activity(user["id"])
+        current_group = payload.current_group if payload is not None else None
+        timestamp = update_user_activity(user["id"], current_group)
     except UserStoreError as exc:
         logger.exception("Не удалось обновить время активности пользователя %s.", user["id"])
         raise HTTPException(

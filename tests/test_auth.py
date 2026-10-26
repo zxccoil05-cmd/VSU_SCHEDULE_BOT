@@ -144,6 +144,20 @@ class TelegramAuthTests(unittest.TestCase):
             self.assertEqual(stored["last_seen_at"], timestamp)
             self.assertIsNotNone(auth.datetime.fromisoformat(timestamp).tzinfo)
 
+    def test_persists_current_group_and_preserves_it_on_login(self):
+        with tempfile.TemporaryDirectory() as directory:
+            users_file = Path(directory) / "users.json"
+            user = {"id": 12345, "first_name": "Тест"}
+            with patch.object(auth, "USERS_FILE", users_file):
+                auth.save_user(user)
+                auth.update_user_activity(12345, "  26ИСиТ1  ")
+                saved = auth.save_user({**user, "first_name": "Обновлённое имя"})
+                self.assertEqual(saved["current_group"], "26ИСиТ1")
+                auth.update_user_activity(12345, "")
+                stored = json.loads(users_file.read_text(encoding="utf-8"))["12345"]
+
+            self.assertIsNone(stored["current_group"])
+
     def test_get_all_users_returns_newest_first_without_modifying_data(self):
         with tempfile.TemporaryDirectory() as directory:
             users_file = Path(directory) / "users.json"

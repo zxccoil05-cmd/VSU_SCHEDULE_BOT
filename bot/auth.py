@@ -247,13 +247,14 @@ def save_user(user: dict) -> dict:
             "display_name": " ".join(part for part in (first_name, last_name) if part),
             "created_at": previous.get("created_at", now),
             "last_seen_at": now,
+            "current_group": previous.get("current_group"),
         }
         _write_users_locked(users)
 
     return users[user_id]
 
 
-def update_user_activity(user_id: int) -> str:
+def update_user_activity(user_id: int, current_group: str | None = None) -> str:
     now = datetime.now(timezone.utc).isoformat()
     with _users_lock:
         users = _read_users_locked()
@@ -261,6 +262,8 @@ def update_user_activity(user_id: int) -> str:
         if record is None:
             raise UserStoreError("Пользователь не найден в users.json.")
         record["last_seen_at"] = now
+        if current_group is not None:
+            record["current_group"] = current_group.strip() or None
         _write_users_locked(users)
     return now
 
